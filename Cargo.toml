@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+	"bot",
+	"discord",
+	"proc-macros",
+]
