@@ -108,6 +108,7 @@ pub struct InteractionDataOption {
 	option_type: CommandOptionType,
 	value: Option<OptionType>,
 	options: Option<Vec<InteractionDataOption>>,
+	focused: Option<bool>,
 }
 
 #[discord_struct]
@@ -134,6 +135,11 @@ pub struct Interaction {
 	user: Option<User>,
 }
 
+#[discord_struct]
+pub struct AutocompleteResult {
+	choices: Vec<ApplicationCommandOptionChoice>,
+}
+
 #[derive(Clone, Debug)]
 #[serialise_tag("type")]
 pub enum InteractionResponse {
@@ -146,7 +152,7 @@ pub enum InteractionResponse {
 	#[tag(7)]
 	UpdateMessage,
 	#[tag(8)]
-	ApplicationCommandAutocompleteResult,
+	ApplicationCommandAutocompleteResult { data: AutocompleteResult },
 	#[tag(9)]
 	Modal { data: Modal },
 }
