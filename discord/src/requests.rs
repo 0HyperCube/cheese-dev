@@ -43,7 +43,7 @@ impl DiscordClient {
 			let now = tokio::time::Instant::now();
 			let mut req = Request::builder()
 				.method(method)
-				.uri(uri.clone())
+				.uri(uri)
 				.body(Body::from(body))
 				.expect("request builder");
 
@@ -60,10 +60,10 @@ impl DiscordClient {
 
 			// Concatenate the body stream into a single buffer...
 
-			let bytes = hyper::body::to_bytes(res).await.map_err(|e| NetError::Hyper(e))?;
+			let bytes = hyper::body::to_bytes(res).await.map_err(NetError::Hyper)?;
 
-			let utf = String::from_utf8(bytes.to_vec()).map_err(|e| NetError::Utf8(e))?;
-			self.cached_get.insert(uri.to_string(), utf.to_string());
+			let utf = String::from_utf8(bytes.to_vec()).map_err(NetError::Utf8)?;
+			self.cached_get.insert(uri.to_string(), utf);
 		}
 		Ok(self.cached_get.get(uri).unwrap())
 	}

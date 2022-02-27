@@ -21,3 +21,4 @@ futures-util = "*"
 url = "*"
 
 log = "*"
+chrono = "*"

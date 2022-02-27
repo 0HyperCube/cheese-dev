@@ -36,7 +36,7 @@ pub fn builder_pattern(input: &mut ItemStruct) -> TokenStream {
 
 				if let PathArguments::AngleBracketed(args) = &vec_seg.arguments {
 					if let Some(GenericArgument::Type(ty)) = args.args.last() {
-						if vec_seg.ident.to_string() == "Vec" {
+						if vec_seg.ident == "Vec" {
 							added = true;
 
 							stream = quote! {#stream
@@ -45,7 +45,7 @@ pub fn builder_pattern(input: &mut ItemStruct) -> TokenStream {
 								self.#ident.push(#argument.into());
 								self
 							}};
-						} else if vec_seg.ident.to_string() == "Option" {
+						} else if vec_seg.ident == "Option" {
 							// Without this, options serialize as `field: null` in json which discord rejects as bad request.
 							extra_attribute = quote! {#[serde(skip_serializing_if = "Option::is_none", default)]};
 
@@ -54,7 +54,7 @@ pub fn builder_pattern(input: &mut ItemStruct) -> TokenStream {
 								let vec_seg = v.path.segments.last().unwrap();
 								if let PathArguments::AngleBracketed(args) = &v.path.segments.last().unwrap().arguments {
 									if let Some(GenericArgument::Type(ty)) = args.args.last() {
-										if vec_seg.ident.to_string() == "Vec" {
+										if vec_seg.ident == "Vec" {
 											added = true;
 											stream = quote! {#stream
 											/// Sets the field on the struct to Some(val) (builder pattern)

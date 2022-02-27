@@ -1,5 +1,6 @@
 use super::prelude::*;
-use crate::MessageComponent;
+use super::ChannelMessage;
+use super::MessageComponent;
 
 #[derive(Clone, Debug, Deserialize_repr, Serialize_repr, Default)]
 #[repr(u8)]
@@ -64,8 +65,9 @@ pub struct ApplicationCommandOption {
 	name: String,
 	description: String,
 	required: bool,
-	choices: Vec<ApplicationCommandOptionChoice>,
-	options: Vec<ApplicationCommandOption>,
+	autocomplete: bool,
+	choices: Option<Vec<ApplicationCommandOptionChoice>>,
+	options: Option<Vec<ApplicationCommandOption>>,
 }
 
 #[request(add_command = POST "/applications/{application_id}/commands" as application_id)]
@@ -104,20 +106,6 @@ pub struct Interaction {
 	data: Option<InteractionData>,
 	channel_id: String,
 	token: String,
-}
-#[discord_struct]
-pub struct Embed {
-	title: String,
-	description: String,
-	timestamp: String,
-	color: u64,
-}
-
-#[discord_struct]
-pub struct ChannelMessage {
-	content: String,
-	embeds: Option<Vec<Embed>>,
-	components: Option<Vec<MessageComponent>>,
 }
 
 #[derive(Clone, Debug)]

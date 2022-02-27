@@ -2,13 +2,17 @@ mod application_commands;
 mod gateway;
 mod intents;
 mod message_components;
+mod messages;
 mod threads;
+mod user;
 
 pub use application_commands::*;
 pub use gateway::*;
 pub use intents::*;
 pub use message_components::*;
+pub use messages::*;
 pub use threads::*;
+pub use user::*;
 
 /// Prelude for discord structs (my proc macros are not clean and require things to be in scope)
 mod prelude {

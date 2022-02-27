@@ -57,7 +57,7 @@ impl Parse for RequestBuilderInput {
 				let _as: Token!(as) = input.parse()?;
 
 				let fields = input.parse_terminated::<Ident, Token!(,)>(Ident::parse)?;
-				fields.iter().map(|v| v.clone()).collect()
+				fields.into_iter().collect()
 			} else {
 				Vec::new()
 			},

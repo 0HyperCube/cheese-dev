@@ -91,8 +91,8 @@ pub fn serialize_tag(mut input: ItemEnum, lit: &LitStr) -> TokenStream {
 			}
 			// Unnamed structs are flattened
 			Fields::Unnamed(unnamed) => {
-				let fields = unnamed.unnamed.iter().map(|field| &field.ty).collect::<Vec<_>>();
-				assert_eq!(fields.len(), 1, "Macro only supports one tuple argument (it is flattened).");
+				let fields = unnamed.unnamed.iter().count();
+				assert_eq!(fields, 1, "Macro only supports one tuple argument (it is flattened).");
 
 				fields_token = quote! {(value)};
 
