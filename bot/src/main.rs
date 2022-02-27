@@ -147,14 +147,14 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 		}
 		InteractionType::ApplicationCommandAutocomplete => {
 			let InteractionDataOption { name, value, .. } = focused.unwrap();
-			let str_value = value.as_ref().unwrap().as_str();
-			info!("Autocomplete focused {} command {}", name, command);
+			let str_value = value.as_ref().unwrap().as_str().to_lowercase();
+			info!("Autocomplete focused {} command {} value {}", name, command, str_value);
 
 			let choices = handler_data
 				.bot_data
 				.names
 				.iter()
-				.filter(|name| name.contains(&str_value))
+				.filter(|name| name.to_lowercase().contains(&str_value))
 				.enumerate()
 				.filter(|(index, _)| *index < 25) // Discord does not allow >25 options.
 				.map(|(_, value)| value)
