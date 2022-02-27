@@ -1,3 +1,6 @@
+use crate::GuildMember;
+use crate::User;
+
 use super::prelude::*;
 use super::ChannelMessage;
 use super::MessageComponent;
@@ -20,7 +23,7 @@ pub enum InteractionType {
 	ApplicationCommandAutocomplete = 4,
 	ModalSubmit = 5,
 }
-#[derive(Clone, Debug, Deserialize_repr, Serialize_repr, Default)]
+#[derive(Clone, Debug, Deserialize_repr, Serialize_repr, Default, PartialEq, Eq)]
 #[repr(u8)]
 pub enum CommandOptionType {
 	#[default]
@@ -44,6 +47,17 @@ pub enum OptionType {
 	String(String),
 	Integer(u64),
 	Number(f64),
+}
+
+impl OptionType {
+	pub fn as_str(&self) -> String {
+		match self {
+			OptionType::None => "None".to_string(),
+			OptionType::String(x) => x.to_string(),
+			OptionType::Integer(x) => x.to_string(),
+			OptionType::Number(x) => x.to_string(),
+		}
+	}
 }
 
 #[discord_struct]
@@ -88,12 +102,22 @@ pub struct ApplicationCommandList {
 }
 
 #[discord_struct]
+pub struct InteractionDataOption {
+	name: String,
+	#[serde(rename = "type")]
+	option_type: CommandOptionType,
+	value: Option<OptionType>,
+	options: Option<Vec<InteractionDataOption>>,
+}
+
+#[discord_struct]
 pub struct InteractionData {
 	id: String,
 	name: String,
 	#[serde(rename = "type")]
 	command_type: CommandType,
 	components: Option<Vec<MessageComponent>>,
+	options: Option<Vec<InteractionDataOption>>,
 }
 
 /// https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-interaction-structure
@@ -106,6 +130,8 @@ pub struct Interaction {
 	data: Option<InteractionData>,
 	channel_id: String,
 	token: String,
+	member: Option<GuildMember>,
+	user: Option<User>,
 }
 
 #[derive(Clone, Debug)]

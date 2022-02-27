@@ -51,7 +51,7 @@ async fn outgoing_messages(
 	mut handle_outgoing_message: Receiver<String>,
 ) {
 	while let Some(x) = handle_outgoing_message.next().await {
-		info!("Sent message {}", x);
+		debug!("Sent message {}", x);
 		write.send(Message::Text(x)).await.unwrap();
 	}
 }

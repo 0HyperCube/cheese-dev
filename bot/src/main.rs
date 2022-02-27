@@ -1,6 +1,9 @@
-use std::sync::{
-	atomic::{AtomicUsize, Ordering},
-	Arc,
+use std::{
+	collections::HashMap,
+	sync::{
+		atomic::{AtomicUsize, Ordering},
+		Arc,
+	},
 };
 
 use discord::{async_channel::Sender, *};
@@ -8,13 +11,20 @@ use discord::{async_channel::Sender, *};
 #[macro_use]
 extern crate log;
 
+pub struct HandlerData<'a> {
+	client: &'a mut DiscordClient,
+	interaction: Interaction,
+	user: User,
+	options: HashMap<String, OptionType>,
+}
+
 // Use simplelog with a file and the console.
 fn init_logger() {
 	use simplelog::*;
 	use std::fs::File;
 
 	CombinedLogger::init(vec![
-		TermLogger::new(LevelFilter::Debug, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+		TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
 		WriteLogger::new(LevelFilter::Debug, Config::default(), File::create("CheeseBot.log").unwrap()),
 	])
 	.unwrap();
@@ -41,27 +51,84 @@ async fn heartbeat(send_outgoing_message: Sender<String>, sequence_number: Arc<A
 	}
 }
 
+fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut DiscordClient) -> (String, HandlerData<'a>) {
+	let user = (interaction)
+		.user
+		.as_ref()
+		.unwrap_or_else(|| &interaction.member.as_ref().unwrap().user)
+		.clone();
+	let mut data = interaction.data.take().unwrap();
+
+	// Extracts the command name (including sub commands)
+	let mut options = data.options.take().unwrap_or(Vec::new());
+	let mut command = data.name;
+	while options.len() > 0
+		&& (options[0].option_type == CommandOptionType::SubCommandGroup || options[0].option_type == CommandOptionType::SubCommand)
+	{
+		command += " ";
+		command += &options[0].name;
+		options = options[0].options.take().unwrap_or(Vec::new());
+	}
+
+	// Extracts the options used
+	let options = options.into_iter().map(|o| (o.name, o.value.unwrap())).collect::<HashMap<_, _>>();
+
+	info!("Command name {}, options {:?}", command, options.keys());
+
+	(
+		command,
+		HandlerData {
+			client,
+			interaction,
+			user,
+			options,
+		},
+	)
+}
+
+async fn respond_with_embed<'a>(handler_data: HandlerData<'a>, embed: Embed) {
+	InteractionCallback::new(InteractionResponse::ChannelMessageWithSource {
+		data: ChannelMessage::new().with_embeds(embed),
+	})
+	.post_respond(handler_data.client, handler_data.interaction.id, handler_data.interaction.token)
+	.await
+	.unwrap();
+}
+
+async fn about<'a>(handler_data: HandlerData<'a>) {
+	respond_with_embed(
+		handler_data,
+		Embed::standard()
+			.with_title("About")
+			.with_description("This bot is developed by Go Consulting Ltd. to handle the finances of New New Cheeseland."),
+	)
+	.await;
+}
+
+async fn balances<'a>(handler_data: HandlerData<'a>) {
+	respond_with_embed(handler_data, Embed::standard().with_title("Balances")).await;
+}
+
+async fn pay<'a>(handler_data: HandlerData<'a>) {
+	respond_with_embed(handler_data, Embed::standard().with_title("Pay")).await;
+}
+
+async fn organisation_create<'a>(handler_data: HandlerData<'a>) {
+	let name = handler_data.options["name"].as_str();
+	respond_with_embed(handler_data, Embed::standard().with_title("Create Organisation").with_description(name)).await;
+}
+
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient) {
 	if let InteractionType::ApplicationCommand = interaction.interaction_type {
-		//let data = interaction.data.unwrap();
+		let (command, handler_data) = construct_handler_data(interaction, client);
 
-		// InteractionCallback::new(InteractionResponse::ChannelMessageWithSource {
-		// 	data: ChannelMessage::new()
-		// 		.with_content("Hello")
-		// 		//.with_components(ActionRows::new().with_components(Button::new().with_custom_id("yyy").with_label("yyy")))
-		// 		// .with_components(
-		// 		// 	ActionRows::new().with_components(TextInput::new().with_custom_id("amount").with_label("Amount")),
-		// 		// ),
-		// })
-		// .post_respond(&mut client, interaction.id, interaction.token)
-		// .await
-		// .unwrap();
-		InteractionCallback::new(InteractionResponse::ChannelMessageWithSource {
-			data: ChannelMessage::new().with_embeds(Embed::standard().with_description("Hello world").with_title("The end of the world!")),
-		})
-		.post_respond(client, interaction.id, interaction.token)
-		.await
-		.unwrap();
+		match command.as_str() {
+			"about" => about(handler_data).await,
+			"balances" => balances(handler_data).await,
+			"pay" => pay(handler_data).await,
+			"organisation create" => organisation_create(handler_data).await,
+			_ => warn!("Unhandled command {}", command),
+		}
 	} else {
 		warn!("Recieved interaction of type {:?} which was not handled", interaction.interaction_type);
 	}
@@ -86,7 +153,7 @@ async fn run() {
 				GatewayRecieve::Dispatch { d, s } => {
 					sequence_number.store(s, Ordering::SeqCst);
 
-					info!("Recieved dispatch {:?}", d);
+					debug!("Recieved dispatch {:?}", d);
 					match d {
 						Dispatch::Ready(r) => create_commands(&mut client, &r.application.id).await,
 						Dispatch::InteractionCreate(interaction) => handle_interaction(interaction, &mut client).await,
@@ -114,8 +181,9 @@ async fn run() {
 				}
 				GatewayRecieve::HeartbeatACK => {}
 			},
-			Err(_) => {
-				error!("Error decoding gateway message");
+			Err(e) => {
+				error!("Error decoding gateway message {:?}", e);
+				debug!("Gateway message {}", text);
 			}
 		}
 	}
