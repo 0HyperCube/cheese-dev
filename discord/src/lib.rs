@@ -11,6 +11,8 @@ mod websocket_handle;
 
 pub use websocket_handle::Connection;
 
+pub use websocket_handle::Read;
+
 mod discord_structs;
 pub use discord_structs::*;
 

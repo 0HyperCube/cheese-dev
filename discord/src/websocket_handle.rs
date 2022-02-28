@@ -1,6 +1,3 @@
-use std::sync::atomic::AtomicUsize;
-use std::sync::Arc;
-
 use crate::websocket_handle::tungstenite::Message;
 use async_channel::{Receiver, Sender};
 use futures_util::stream::{SplitSink, SplitStream};
@@ -11,10 +8,11 @@ use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::*;
 use url::Url;
 
+pub type Read = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
+
 pub struct Connection {
 	pub send_outgoing_message: Sender<String>,
-	pub read: SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>,
-	pub sequence_number: Arc<AtomicUsize>,
+	pub read: Read,
 }
 
 /// Connects to the gateway
@@ -34,15 +32,10 @@ pub async fn connect_gateway(address: String, header: String) -> Connection {
 
 	// Allow communications with outgoing message handlers
 	let (send_outgoing_message, handle_outgoing_message) = async_channel::unbounded();
-	let sequence_number = Arc::new(AtomicUsize::new(usize::MAX));
 
 	tokio::spawn(outgoing_messages(write, handle_outgoing_message));
 
-	Connection {
-		send_outgoing_message,
-		read,
-		sequence_number,
-	}
+	Connection { send_outgoing_message, read }
 }
 
 /// Sends outgoing messages that are recieved from the async-channel

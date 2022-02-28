@@ -1,10 +1,4 @@
-use std::{
-	collections::HashMap,
-	sync::{
-		atomic::{AtomicUsize, Ordering},
-		Arc,
-	},
-};
+use std::collections::HashMap;
 
 use discord::{async_channel::Sender, *};
 
@@ -35,25 +29,6 @@ fn init_logger() {
 	.unwrap();
 
 	info!("Initalised logger!");
-}
-
-async fn send_heartbeat(send_outgoing_message: &Sender<String>, sequence_number: &Arc<AtomicUsize>) {
-	let val = sequence_number.load(Ordering::SeqCst);
-	let heartbeat = if val == usize::MAX { None } else { Some(val) };
-
-	send_outgoing_message
-		.send(serde_json::to_string(&GatewaySend::Heartbeat { d: heartbeat }).unwrap())
-		.await
-		.unwrap();
-}
-
-/// Sends a heartbeat every `period` milliseconds
-async fn heartbeat(send_outgoing_message: Sender<String>, sequence_number: Arc<AtomicUsize>, interval: u64) {
-	let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(interval));
-	loop {
-		interval.tick().await;
-		send_heartbeat(&send_outgoing_message, &sequence_number).await;
-	}
 }
 
 fn construct_handler_data<'a>(
@@ -176,10 +151,47 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 	}
 }
 
-/// Runs the bot
-async fn run() {
+enum MainMessage {
+	Gateway(GatewayRecieve),
+	GatewayClosed,
+	Heartbeat,
+	WealthTax,
+}
+
+async fn read_websocket(mut read: Read, send_ev: Sender<MainMessage>) {
+	while let Some(Ok(Message::Text(text))) = read.next().await {
+		debug!("Recieved text {}", text);
+		match serde_json::from_str(&text) {
+			Ok(deserialised) => {
+				if send_ev.send(MainMessage::Gateway(deserialised)).await.is_err() {
+					return;
+				}
+			}
+			Err(e) => {
+				error!("Error decoding gateway message {:?}", e);
+			}
+		}
+	}
+	warn!("Websocket closing!");
+	send_ev.send(MainMessage::GatewayClosed).await.unwrap_or(())
+}
+
+/// Sends a heartbeat every `period` milliseconds
+async fn dispatch_heartbeat(send_ev: Sender<MainMessage>, interval: u64) {
+	let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(interval));
+	loop {
+		interval.tick().await;
+		if send_ev.send(MainMessage::Heartbeat).await.is_err() {
+			return;
+		}
+	}
+}
+
+/// Continually tries to reconnect
+async fn run_loop() {
 	let mut client = DiscordClient::new(include_str!("token.txt"));
 
+	// TODO: Deserialise the actual data.
 	let mut bot_data = BotData {
 		names: vec![
 			"a".to_string(),
@@ -212,34 +224,45 @@ async fn run() {
 			"Jeff".to_string(),
 		],
 	};
+	loop {
+		run(&mut client, &mut bot_data).await;
+	}
+}
 
-	let gateway = GatewayMeta::get_gateway_meta(&mut client).await.unwrap();
+/// Runs the bot
+async fn run(client: &mut DiscordClient, bot_data: &mut BotData) {
+	let gateway = GatewayMeta::get_gateway_meta(client).await.unwrap();
 	info!("Recieved gateway metadata: {:?}", gateway);
 
-	let Connection {
-		send_outgoing_message,
-		mut read,
-		sequence_number,
-	} = client.connect_gateway(gateway.url).await;
+	let (send_ev, mut recieve_ev) = async_channel::unbounded();
 
-	while let Some(Ok(Message::Text(text))) = read.next().await {
-		match serde_json::from_str(&text) {
-			Ok(deserialised) => match deserialised {
+	let Connection { send_outgoing_message, read } = client.connect_gateway(gateway.url).await;
+
+	let mut sequence_number = None;
+
+	tokio::spawn(read_websocket(read, send_ev.clone()));
+
+	while let Some(main_message) = recieve_ev.next().await {
+		match main_message {
+			MainMessage::Gateway(deserialised) => match deserialised {
 				GatewayRecieve::Dispatch { d, s } => {
-					sequence_number.store(s, Ordering::SeqCst);
+					sequence_number = Some(s);
 
 					debug!("Recieved dispatch {:?}", d);
 					match d {
-						Dispatch::Ready(r) => create_commands(&mut client, &r.application.id).await,
-						Dispatch::InteractionCreate(interaction) => handle_interaction(interaction, &mut client, &mut bot_data).await,
+						Dispatch::Ready(r) => create_commands(client, &r.application.id).await,
+						Dispatch::InteractionCreate(interaction) => handle_interaction(interaction, client, bot_data).await,
 						_ => warn!("Unhandled dispatch"),
 					}
 				}
 				GatewayRecieve::Heartbeat { .. } => {
-					warn!("Discord wants a heartbeat, sending");
-					send_heartbeat(&send_outgoing_message, &sequence_number).await;
+					warn!("Discord wants a heartbeat, sending (should probably not happen)");
+					send_ev.send(MainMessage::Heartbeat).await.unwrap();
 				}
-				GatewayRecieve::Reconnect => todo!(),
+				GatewayRecieve::Reconnect => {
+					warn!("Discord has told us to reconnect");
+					return;
+				}
 				GatewayRecieve::InvalidSession { d } => error!("Invalid session, can reconnect {}", d),
 				GatewayRecieve::Hello { d } => {
 					let identify = GatewaySend::Identify {
@@ -252,14 +275,18 @@ async fn run() {
 					info!("Recieved hello {:?}, sending identify {:?}", d, identify);
 
 					send_outgoing_message.send(serde_json::to_string(&identify).unwrap()).await.unwrap();
-					tokio::spawn(heartbeat(send_outgoing_message.clone(), sequence_number.clone(), d.heartbeat_interval));
+					tokio::spawn(dispatch_heartbeat(send_ev.clone(), d.heartbeat_interval));
 				}
 				GatewayRecieve::HeartbeatACK => {}
 			},
-			Err(e) => {
-				error!("Error decoding gateway message {:?}", e);
-				debug!("Gateway message {}", text);
+			MainMessage::GatewayClosed => return,
+			MainMessage::Heartbeat => {
+				send_outgoing_message
+					.send(serde_json::to_string(&GatewaySend::Heartbeat { d: sequence_number }).unwrap())
+					.await
+					.unwrap();
 			}
+			MainMessage::WealthTax => todo!(),
 		}
 	}
 }
@@ -331,5 +358,5 @@ fn main() {
 		.enable_all()
 		.build()
 		.unwrap()
-		.block_on(run());
+		.block_on(run_loop());
 }
