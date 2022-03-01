@@ -1,0 +1,33 @@
+(
+	users: {
+		"630073509137350690": (
+			account: 0,
+			mp: true,
+			last_pay: "",
+			organisations: [
+				3,
+			],
+		),
+	},
+	personal_accounts: {
+		1: (
+			name: "Blobby",
+			balance: 0,
+		),
+		0: (
+			name: "Käse",
+			balance: 0,
+		),
+	},
+	organisation_accounts: {
+		2: (
+			name: "High quality media corp!",
+			balance: 0,
+		),
+		3: (
+			name: "blobby",
+			balance: 0,
+		),
+	},
+	next_account: 4,
+)
