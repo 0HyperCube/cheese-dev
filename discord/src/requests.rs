@@ -22,7 +22,7 @@ pub struct DiscordClient {
 	cached_get: HashMap<String, String>,
 }
 impl DiscordClient {
-	pub const API: &'static str = "https://discord.com/api/v9";
+	pub const API: &'static str = "https://discord.com/api/v10";
 	pub const GUILD_ID: &'static str = "907657508292792342";
 
 	/// Constructs a new client

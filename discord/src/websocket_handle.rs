@@ -17,7 +17,7 @@ pub struct Connection {
 
 /// Connects to the gateway
 pub async fn connect_gateway(address: String, header: String) -> Connection {
-	let socket = Url::parse(&(address + "?v=9&encoding=json")).unwrap();
+	let socket = Url::parse(&(address + "?v=10&encoding=json")).unwrap();
 	info!("Connecting to {}", socket);
 
 	// Add auth headers
