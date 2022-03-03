@@ -659,6 +659,10 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 						result += &apply_wealth_tax_account(bot_data, bot_data.users[&user_id].account.clone(), Some("Personal"));
 
+						for org in bot_data.users[&user_id].organisations.clone() {
+							result += &apply_wealth_tax_account(bot_data, org, None);
+						}
+
 						let description = format!(
 							"Wealth tax has been applied at `{:.2}%`.\n\n**Payments**\n```\n{}```",
 							bot_data.wealth_tax, result
