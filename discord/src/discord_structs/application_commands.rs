@@ -1,3 +1,5 @@
+use core::panic;
+
 use crate::GuildMember;
 use crate::User;
 
@@ -52,10 +54,14 @@ pub enum OptionType {
 impl OptionType {
 	pub fn as_str(&self) -> String {
 		match self {
-			OptionType::None => "None".to_string(),
 			OptionType::String(x) => x.to_string(),
-			OptionType::Integer(x) => x.to_string(),
-			OptionType::Number(x) => x.to_string(),
+			_ => unimplemented!("Invalid type for str"),
+		}
+	}
+	pub fn as_float(&self) -> f64 {
+		match self {
+			OptionType::Number(x) => *x,
+			_ => unimplemented!("Invalid type for float"),
 		}
 	}
 }

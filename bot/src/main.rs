@@ -7,13 +7,14 @@ use serde::{Deserialize, Serialize};
 extern crate log;
 
 type AccountId = u64;
+const TREASURY: AccountId = 0;
 
 /// The information tied to a specific discord userid
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CheeseUser {
 	account: AccountId,
 	mp: bool,
-	last_pay: String,
+	last_pay: chrono::DateTime<chrono::Utc>,
 	organisations: Vec<AccountId>,
 }
 
@@ -25,21 +26,77 @@ pub struct Account {
 }
 
 /// All the data the bot saves
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BotData {
 	pub users: HashMap<String, CheeseUser>,
 	pub personal_accounts: HashMap<AccountId, Account>,
 	pub organisation_accounts: HashMap<AccountId, Account>,
 	pub next_account: AccountId,
+	pub wealth_tax: f64,
+}
+
+impl Default for BotData {
+	fn default() -> Self {
+		let organisation_accounts = HashMap::from([(
+			0,
+			Account {
+				name: "Treasury".into(),
+				balance: 1000,
+			},
+		)]);
+		Self {
+			users: HashMap::new(),
+			personal_accounts: HashMap::new(),
+			organisation_accounts,
+			next_account: 1,
+			wealth_tax: 0.05,
+		}
+	}
 }
 
 impl BotData {
+	/// Get the cheese user information given a discord user
 	pub fn cheese_user<'a>(&'a self, user: &User) -> &'a CheeseUser {
 		&self.users[&user.id]
 	}
 
+	/// Get the personal account name from a discord user
 	pub fn personal_account_name(&self, user: &User) -> String {
 		self.personal_accounts[&self.cheese_user(user).account].name.clone()
+	}
+
+	/// Get the account from an account id (either personal or organisation)
+	pub fn account(&mut self, account: AccountId) -> &mut Account {
+		self.personal_accounts
+			.get_mut(&account)
+			.map_or_else(|| self.organisation_accounts.get_mut(&account), |x| Some(x))
+			.unwrap()
+	}
+
+	/// Checks if the given account id exists at all
+	pub fn account_exists(&self, account: AccountId, _user: &User) -> bool {
+		self.personal_accounts.contains_key(&account) || self.organisation_accounts.contains_key(&account)
+	}
+
+	/// Checks if the given account id is owned by the specified user (personal or owned organisation)
+	pub fn account_owned(&self, account: AccountId, user: &User) -> bool {
+		let cheese_user = self.cheese_user(user);
+		account == cheese_user.account || cheese_user.organisations.contains(&account)
+	}
+
+	/// Finds the account owner from an account id
+	pub fn account_owner(&self, account: AccountId) -> String {
+		self.users
+			.iter()
+			.find(|(_, user)| user.account == account || user.organisations.contains(&account))
+			.unwrap()
+			.0
+			.clone()
+	}
+
+	/// Computes the total currency in circulation (for currency information in balances)
+	pub fn total_currency(&self) -> u32 {
+		self.personal_accounts.iter().map(|(_, a)| a.balance).sum::<u32>() + self.organisation_accounts.iter().map(|(_, a)| a.balance).sum::<u32>()
 	}
 
 	/// List all personal account names (with added suffix) and ids
@@ -129,7 +186,7 @@ fn construct_handler_data<'a>(
 			CheeseUser {
 				account: bot_data.next_account,
 				mp: true,
-				last_pay: String::new(),
+				last_pay: chrono::MIN_DATETIME,
 				organisations: Vec::new(),
 			},
 		);
@@ -178,17 +235,46 @@ fn construct_handler_data<'a>(
 }
 
 /// Utility function for responding to an interaction with an embed
-async fn respond_with_embed<'a>(handler_data: HandlerData<'a>, embed: Embed) {
+async fn respond_with_embed<'a>(handler_data: &mut HandlerData<'a>, embed: Embed) {
 	InteractionCallback::new(InteractionResponse::ChannelMessageWithSource {
 		data: ChannelMessage::new().with_embeds(embed),
 	})
-	.post_respond(handler_data.client, handler_data.interaction.id, handler_data.interaction.token)
+	.post_respond(
+		handler_data.client,
+		handler_data.interaction.id.clone(),
+		handler_data.interaction.token.clone(),
+	)
 	.await
 	.unwrap();
 }
 
+/// Utility function for dming an account owner an embed
+async fn dm_embed<'a>(handler_data: &mut HandlerData<'a>, embed: Embed, recipient_id: String) {
+	// We first create the channel (does nothing if it already exists)
+	let channel = CreateDM { recipient_id }.post_create(handler_data.client).await.unwrap();
+
+	// Then we can send the message in the channel
+	ChannelMessage::new()
+		.with_embeds(embed)
+		.post_create(handler_data.client, channel.id)
+		.await
+		.unwrap();
+}
+
+/// Utility function to extract an account from a slash command option
+async fn account_option<'a, V>(bot_data: &mut BotData, option: &OptionType, validation: V, user: &User) -> Option<u64>
+where
+	V: Fn(&BotData, AccountId, &User) -> bool,
+{
+	let parse_int = str::parse::<AccountId>(&option.as_str());
+	match parse_int.map(|id| (id, validation(bot_data, id, user))) {
+		Ok((id, true)) => Some(id),
+		_ => None,
+	}
+}
+
 /// Handles the `/about` command
-async fn about<'a>(handler_data: HandlerData<'a>) {
+async fn about<'a>(handler_data: &mut HandlerData<'a>) {
 	respond_with_embed(
 		handler_data,
 		Embed::standard()
@@ -199,16 +285,147 @@ async fn about<'a>(handler_data: HandlerData<'a>) {
 }
 
 /// Handles the `/balances` command
-async fn balances<'a>(handler_data: HandlerData<'a>) {
-	respond_with_embed(handler_data, Embed::standard().with_title("Balances")).await;
+async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
+	fn format_account(Account { name, balance }: &Account) -> String {
+		format!("{:-20} {}\n", format!("{}:", name), format_cheesecoin(*balance))
+	}
+
+	let mut description = format!(
+		"**Currency information**\n```\n{:-20} {:.2}%\n{:-20} {}\n```\n**Your accounts**\n```",
+		"Total Currency:",
+		format_cheesecoin(handler_data.bot_data.total_currency()),
+		"Wealth Tax:",
+		handler_data.bot_data.wealth_tax
+	);
+
+	let cheese_user = handler_data.bot_data.cheese_user(&handler_data.user);
+
+	// Add their personal account to the resulting string
+	description += &format_account(&handler_data.bot_data.personal_accounts[&cheese_user.account]);
+
+	// Add their organisations to the resulting string
+	for account in &cheese_user.organisations {
+		description += &format_account(&handler_data.bot_data.organisation_accounts[&account])
+	}
+
+	description += "```";
+
+	respond_with_embed(handler_data, Embed::standard().with_title("Balances").with_description(description)).await;
+}
+
+/// Utility function for formating cheesecoin as `4.23cc`
+pub fn format_cheesecoin(cc: u32) -> String {
+	format!("{:.2}cc", cc as f64 / 100.)
+}
+
+/// Handles transactions (from pay or mprollcall) - returns (payer message, reciever message)
+fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u64, amount: f64) -> (String, Option<String>) {
+	// Special error for negitive
+	if amount < 0. {
+		return ("Cannot pay negative amount".into(), None);
+	}
+	// Amount cast into real units
+	let amount = (amount * 100.) as u32;
+
+	let from = handler_data.bot_data.account(from);
+
+	// Check the account can back the transaction
+	if from.balance < amount {
+		return (format!("{} has only {}", from.name, format_cheesecoin(from.balance)), None);
+	}
+	from.balance -= amount;
+	let payer_name = from.name.clone();
+
+	let recipiant = handler_data.bot_data.account(recipiant);
+	recipiant.balance += amount;
+
+	let reciever_message = format!(
+		"Your account - {} - has recieved {} from {}",
+		recipiant.name,
+		format_cheesecoin(amount),
+		payer_name
+	);
+
+	let sender_message = format!(
+		"Sucsessfully transfered {} from {} to {}",
+		format_cheesecoin(amount),
+		payer_name,
+		recipiant.name
+	);
+
+	(sender_message, Some(reciever_message))
 }
 
 /// Handles the `/pay` command
-async fn pay<'a>(handler_data: HandlerData<'a>) {
-	respond_with_embed(handler_data, Embed::standard().with_title("Pay")).await;
+async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
+	let bot_data = &mut handler_data.bot_data;
+	let recipiant = match account_option(bot_data, &handler_data.options["recipiant"], BotData::account_exists, &handler_data.user).await {
+		Some(x) => x,
+		None => {
+			respond_with_embed(
+				handler_data,
+				Embed::standard().with_title("Payment").with_description("Invalid recipiant"),
+			)
+			.await;
+			return;
+		}
+	};
+	let from = match account_option(bot_data, &handler_data.options["from"], BotData::account_owned, &handler_data.user).await {
+		Some(x) => x,
+		None => {
+			respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description("Invalid from")).await;
+			return;
+		}
+	};
+	let amount = handler_data.options["cheesecoin"].as_float();
+
+	let (payer_message, recipiant_message) = transact(handler_data, recipiant, from, amount);
+
+	if let Some(message) = recipiant_message {
+		dm_embed(
+			handler_data,
+			Embed::standard().with_title("Payment").with_description(message),
+			handler_data.bot_data.account_owner(recipiant),
+		)
+		.await;
+	}
+
+	respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description(payer_message)).await;
 }
+
+/// Handles the `/claim rollcall` command
+async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
+	let cheese_user = handler_data.bot_data.users.get_mut(&handler_data.user.id).unwrap();
+	if chrono::Utc::now() - cheese_user.last_pay < chrono::Duration::hours(15) {
+		let descripition = format!(
+			"You can claim this benefit only once per day. You have last claimed it {} hours ago",
+			(chrono::Utc::now() - cheese_user.last_pay).num_hours()
+		);
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Claim Rollcall").with_description(descripition),
+		)
+		.await;
+		return;
+	}
+	cheese_user.last_pay = chrono::Utc::now();
+
+	let recipiant = cheese_user.account;
+	let (_, recipiant_message) = transact(handler_data, recipiant, TREASURY, 2.);
+
+	if let Some(message) = recipiant_message {
+		respond_with_embed(handler_data, Embed::standard().with_title("Claim Rollcall").with_description(message)).await;
+	} else {
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Claim Rollcall").with_description("Treasury Bankrupt!"),
+		)
+		.await;
+	}
+}
+
 /// Handles the `/orgainsation create` command
-async fn organisation_create<'a>(handler_data: HandlerData<'a>) {
+async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 	let org_name = handler_data.options["name"].as_str();
 
 	let name = org_name.clone();
@@ -243,14 +460,15 @@ async fn organisation_create<'a>(handler_data: HandlerData<'a>) {
 
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
 	let command_type = interaction.interaction_type.clone();
-	let (command, focused, handler_data) = construct_handler_data(interaction, client, bot_data);
+	let (command, focused, mut handler_data) = construct_handler_data(interaction, client, bot_data);
 	match command_type {
 		InteractionType::ApplicationCommand => {
 			match command.as_str() {
-				"about" => about(handler_data).await,
-				"balances" => balances(handler_data).await,
-				"pay" => pay(handler_data).await,
-				"organisation create" => organisation_create(handler_data).await,
+				"about" => about(&mut handler_data).await,
+				"balances" => balances(&mut handler_data).await,
+				"pay" => pay(&mut handler_data).await,
+				"organisation create" => organisation_create(&mut handler_data).await,
+				"claim rollcall" => rollcall(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
 		}
@@ -343,21 +561,13 @@ async fn run_loop() {
 
 	// Open file and deserialise the data.
 	let path = "cheese_data.ron";
-	let mut bot_data = std::fs::read_to_string(path).map_or(BotData::default(), |v| ron::from_str(&v).unwrap_or(BotData::default()));
-	// bot_data.personal_accounts.insert(
-	// 	55,
-	// 	Account {
-	// 		name: "NewsCorp LTD".into(),
-	// 		balance: 440,
-	// 	},
-	// );
-	// bot_data.organisation_accounts.insert(
-	// 	44,
-	// 	Account {
-	// 		name: "Bob the reporter".into(),
-	// 		balance: 440,
-	// 	},
-	// );
+	let mut bot_data = std::fs::read_to_string(path).map_or(BotData::default(), |v| match ron::from_str(&v) {
+		Err(e) => {
+			error!("Decoding ron {:?}", e);
+			panic!("Error decoding ron")
+		}
+		Ok(x) => x,
+	});
 
 	loop {
 		run(&mut client, &mut bot_data, path).await;
@@ -484,7 +694,16 @@ async fn create_commands(client: &mut DiscordClient, application_id: &String) {
 					.with_name("create")
 					.with_description("Create an organisation.")
 				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the new organisation"))),
-		)
+		).with_commands(
+			ApplicationCommand::new()
+				.with_command_type(CommandType::Chat)
+				.with_name("claim")
+				.with_description("Claim commands")
+				.with_options(ApplicationCommandOption::new()
+					.with_name("rollcall")
+					.with_description("Claim your MP daily rollcall")
+
+		))
 		// .with_commands(
 		// 	ApplicationCommand::new()
 		// 		.with_command_type(CommandType::Chat)

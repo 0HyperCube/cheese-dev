@@ -15,12 +15,18 @@ impl Embed {
 	}
 }
 
-#[request(create = POST "/users/@me/channels")]
+#[discord_struct]
+pub struct Channel {
+	id: String,
+}
+
+#[request(create return Channel = POST "/users/@me/channels")]
 #[discord_struct]
 pub struct CreateDM {
 	recipient_id: String,
 }
 
+#[request(create = POST "/channels/{channel_id}/messages" as channel_id)]
 #[discord_struct]
 pub struct ChannelMessage {
 	content: Option<String>,

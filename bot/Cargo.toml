@@ -13,3 +13,4 @@ log = "*"
 
 serde = "*"
 ron = "*"
+chrono = { version = "*", features = ["serde"] }
