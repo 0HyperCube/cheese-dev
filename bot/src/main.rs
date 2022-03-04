@@ -78,6 +78,11 @@ impl BotData {
 		self.personal_accounts.contains_key(&account) || self.organisation_accounts.contains_key(&account)
 	}
 
+	/// Checks if the given personal account id exists at all
+	pub fn personal_account_exists(&self, account: AccountId, _user: &User) -> bool {
+		self.personal_accounts.contains_key(&account)
+	}
+
 	/// Checks if the given account id is owned by the specified user (personal or owned organisation)
 	pub fn account_owned(&self, account: AccountId, user: &User) -> bool {
 		let cheese_user = self.cheese_user(user);
@@ -116,11 +121,11 @@ impl BotData {
 		let user = self.cheese_user(user);
 		self.personal_accounts
 			.iter()
-			.filter(|(id, _)| **id == user.account)
+			.filter(|(id, _)| **id != user.account)
 			.map(|(id, account)| (account.name.clone() + " (Person)", *id))
 	}
 	/// List all organisation account names (with added suffix) and ids
-	pub fn orgainsiation_accounts(&self) -> impl Iterator<Item = (String, AccountId)> + '_ {
+	pub fn organisation_accounts(&self) -> impl Iterator<Item = (String, AccountId)> + '_ {
 		self.organisation_accounts
 			.iter()
 			.map(|(id, account)| (account.name.clone() + " (Organisation)", *id))
@@ -458,6 +463,64 @@ async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 	.await;
 }
 
+async fn organisation_transfer<'a>(handler_data: &mut HandlerData<'a>) {
+	let bot_data = &mut handler_data.bot_data;
+
+	let organisation = match account_option(bot_data, &handler_data.options["name"], BotData::account_owned, &handler_data.user).await {
+		Some(x) => x,
+		None => {
+			respond_with_embed(
+				handler_data,
+				Embed::standard().with_title("Payment").with_description("Invalid organisation name"),
+			)
+			.await;
+			return;
+		}
+	};
+
+	let owner_account = match account_option(
+		bot_data,
+		&handler_data.options["owner"],
+		BotData::personal_account_exists,
+		&handler_data.user,
+	)
+	.await
+	{
+		Some(x) => x,
+		None => {
+			respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description("Invalid owner")).await;
+			return;
+		}
+	};
+
+	handler_data
+		.bot_data
+		.users
+		.get_mut(&handler_data.bot_data.personal_accounts[&owner_account].name)
+		.unwrap()
+		.organisations
+		.push(organisation);
+
+	handler_data
+		.bot_data
+		.users
+		.get_mut(&handler_data.user.id)
+		.unwrap()
+		.organisations
+		.retain(|o| o != &organisation);
+
+	#[allow(mutable_borrow_reservation_conflict)]
+	if let (OptionType::String(name), OptionType::String(owner)) = (&handler_data.options["name"], &handler_data.options["owner"]) {
+		respond_with_embed(
+			handler_data,
+			Embed::standard()
+				.with_title("Transferred organisation")
+				.with_description(format!("Transferred {} to {} successfully", name, owner)),
+		)
+		.await;
+	}
+}
+
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
 	let command_type = interaction.interaction_type.clone();
 	let (command, focused, mut handler_data) = construct_handler_data(interaction, client, bot_data);
@@ -468,6 +531,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"balances" => balances(&mut handler_data).await,
 				"pay" => pay(&mut handler_data).await,
 				"organisation create" => organisation_create(&mut handler_data).await,
+				"organisation transfer" => organisation_transfer(&mut handler_data).await,
 				"claim rollcall" => rollcall(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
@@ -481,13 +545,15 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				("pay", "recipiant") => handler_data
 					.bot_data
 					.personal_accounts()
-					.chain(handler_data.bot_data.orgainsiation_accounts())
+					.chain(handler_data.bot_data.organisation_accounts())
 					.collect::<Vec<_>>(),
 				("pay", "from") => handler_data
 					.bot_data
 					.personal_account(&handler_data.user)
 					.chain(handler_data.bot_data.owned_orgs(&handler_data.user))
 					.collect(),
+				("organisation transfer", "name") => handler_data.bot_data.owned_orgs(&handler_data.user).collect(),
+				("organisation transfer", "owner") => handler_data.bot_data.non_self_people(&handler_data.user).collect(),
 				_ => {
 					warn!(r#"Invalid autocomplete for "{}" on command "{}""#, command, name);
 					return;
@@ -693,8 +759,13 @@ async fn create_commands(client: &mut DiscordClient, application_id: &String) {
 				.with_options(ApplicationCommandOption::new()
 					.with_name("create")
 					.with_description("Create an organisation.")
-				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the new organisation"))),
-		).with_commands(
+				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the new organisation")))
+				.with_options(ApplicationCommandOption::new()
+					.with_name("transfer")
+					.with_description("Transfer an organisation")
+				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
+				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("owner").with_required(true).with_description("The new owner of the organisation").with_autocomplete(true))),
+			).with_commands(
 			ApplicationCommand::new()
 				.with_command_type(CommandType::Chat)
 				.with_name("claim")

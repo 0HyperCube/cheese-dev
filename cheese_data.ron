@@ -1,13 +1,25 @@
 (
 	users: {
+		"737928480389333004": (
+			account: 2,
+			mp: true,
+			last_pay: "-262144-01-01T00:00:00Z",
+			organisations: [],
+		),
 		"630073509137350690": (
 			account: 1,
 			mp: true,
 			last_pay: "2022-03-03T18:21:24.762444281Z",
-			organisations: [],
+			organisations: [
+				3,
+			],
 		),
 	},
 	personal_accounts: {
+		2: (
+			name: "i will eat you",
+			balance: 0,
+		),
 		1: (
 			name: "Käse",
 			balance: 200,
@@ -18,7 +30,11 @@
 			name: "Treasury",
 			balance: 800,
 		),
+		3: (
+			name: "blobby",
+			balance: 0,
+		),
 	},
-	next_account: 2,
+	next_account: 4,
 	wealth_tax: 0.05,
 )
