@@ -63,6 +63,12 @@ impl DiscordClient {
 			let bytes = hyper::body::to_bytes(res).await.map_err(NetError::Hyper)?;
 
 			let utf = String::from_utf8(bytes.to_vec()).map_err(NetError::Utf8)?;
+
+			// Log an error if the request was not sucessful (including the body as discord sends error information)
+			if !status.is_success() {
+				error!("Unsucsessful request. Recieved response {} with body {}", status, utf);
+			}
+
 			self.cached_get.insert(uri.to_string(), utf);
 		}
 		Ok(self.cached_get.get(uri).unwrap())
