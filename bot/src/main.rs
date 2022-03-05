@@ -494,8 +494,10 @@ async fn organisation_transfer<'a>(handler_data: &mut HandlerData<'a>) {
 	handler_data
 		.bot_data
 		.users
-		.get_mut(&handler_data.bot_data.personal_accounts[&owner_account].name)
+		.iter_mut()
+		.find(|(_, user)| user.account == owner_account)
 		.unwrap()
+		.1
 		.organisations
 		.push(organisation);
 
