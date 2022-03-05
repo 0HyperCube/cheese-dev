@@ -16,6 +16,10 @@
 		),
 	},
 	personal_accounts: {
+		2: (
+			name: "i will eat you",
+			balance: 0,
+		),
 		1: (
 			name: "i will eat you",
 			balance: 98,
@@ -33,6 +37,10 @@
 		0: (
 			name: "Treasury",
 			balance: 36,
+		),
+		3: (
+			name: "blobby",
+			balance: 0,
 		),
 	},
 	next_account: 4,
