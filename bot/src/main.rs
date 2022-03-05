@@ -509,16 +509,16 @@ async fn organisation_transfer<'a>(handler_data: &mut HandlerData<'a>) {
 		.organisations
 		.retain(|o| o != &organisation);
 
-	#[allow(mutable_borrow_reservation_conflict)]
-	if let (OptionType::String(name), OptionType::String(owner)) = (&handler_data.options["name"], &handler_data.options["owner"]) {
-		respond_with_embed(
-			handler_data,
-			Embed::standard()
-				.with_title("Transferred organisation")
-				.with_description(format!("Transferred {} to {} successfully", name, owner)),
-		)
-		.await;
-	}
+	let description = format!(
+		"Transferred {} to {} successfully",
+		handler_data.bot_data.organisation_accounts[&organisation].name, handler_data.bot_data.personal_accounts[&owner_account].name
+	);
+
+	respond_with_embed(
+		handler_data,
+		Embed::standard().with_title("Transferred organisation").with_description(description),
+	)
+	.await;
 }
 
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
