@@ -33,6 +33,7 @@ pub struct BotData {
 	pub organisation_accounts: HashMap<AccountId, Account>,
 	pub next_account: AccountId,
 	pub wealth_tax: f64,
+	pub last_wealth_tax: chrono::DateTime<chrono::Utc>,
 }
 
 impl Default for BotData {
@@ -50,6 +51,7 @@ impl Default for BotData {
 			organisation_accounts,
 			next_account: 1,
 			wealth_tax: 0.05,
+			last_wealth_tax: chrono::Utc::now(),
 		}
 	}
 }
@@ -253,17 +255,13 @@ async fn respond_with_embed<'a>(handler_data: &mut HandlerData<'a>, embed: Embed
 	.unwrap();
 }
 
-/// Utility function for dming an account owner an embed
-async fn dm_embed<'a>(handler_data: &mut HandlerData<'a>, embed: Embed, recipient_id: String) {
+/// Utility function for dming a discord user an embed
+async fn dm_embed<'a>(client: &mut DiscordClient, embed: Embed, recipient_id: String) {
 	// We first create the channel (does nothing if it already exists)
-	let channel = CreateDM { recipient_id }.post_create(handler_data.client).await.unwrap();
+	let channel = CreateDM { recipient_id }.post_create(client).await.unwrap();
 
 	// Then we can send the message in the channel
-	ChannelMessage::new()
-		.with_embeds(embed)
-		.post_create(handler_data.client, channel.id)
-		.await
-		.unwrap();
+	ChannelMessage::new().with_embeds(embed).post_create(client, channel.id).await.unwrap();
 }
 
 /// Utility function to extract an account from a slash command option
@@ -296,7 +294,7 @@ async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
 	}
 
 	let mut description = format!(
-		"**Currency information**\n```\n{:-20} {:.2}%\n{:-20} {}\n```\n**Your accounts**\n```",
+		"**Currency information**\n```\n{:-20} {}\n{:-20} {:.2}%\n```\n**Your accounts**\n```",
 		"Total Currency:",
 		format_cheesecoin(handler_data.bot_data.total_currency()),
 		"Wealth Tax:",
@@ -327,7 +325,7 @@ pub fn format_cheesecoin(cc: u32) -> String {
 fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u64, amount: f64) -> (String, Option<String>) {
 	// Special error for negitive
 	if amount < 0. {
-		return ("Cannot pay negative amount".into(), None);
+		return ("Cannot pay a negative amount.".into(), None);
 	}
 	// Amount cast into real units
 	let amount = (amount * 100.) as u32;
@@ -336,7 +334,7 @@ fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u64, a
 
 	// Check the account can back the transaction
 	if from.balance < amount {
-		return (format!("{} has only {}", from.name, format_cheesecoin(from.balance)), None);
+		return (format!("{} has only {}.", from.name, format_cheesecoin(from.balance)), None);
 	}
 	from.balance -= amount;
 	let payer_name = from.name.clone();
@@ -345,14 +343,14 @@ fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u64, a
 	recipiant.balance += amount;
 
 	let reciever_message = format!(
-		"Your account - {} - has recieved {} from {}",
+		"Your account - {} - has recieved {} from {}.",
 		recipiant.name,
 		format_cheesecoin(amount),
 		payer_name
 	);
 
 	let sender_message = format!(
-		"Sucsessfully transfered {} from {} to {}",
+		"Sucsessfully transfered {} from {} to {}.",
 		format_cheesecoin(amount),
 		payer_name,
 		recipiant.name
@@ -369,7 +367,7 @@ async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 		None => {
 			respond_with_embed(
 				handler_data,
-				Embed::standard().with_title("Payment").with_description("Invalid recipiant"),
+				Embed::standard().with_title("Payment").with_description("Invalid recipiant."),
 			)
 			.await;
 			return;
@@ -378,7 +376,7 @@ async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 	let from = match account_option(bot_data, &handler_data.options["from"], BotData::account_owned, &handler_data.user).await {
 		Some(x) => x,
 		None => {
-			respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description("Invalid from")).await;
+			respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description("Invalid from.")).await;
 			return;
 		}
 	};
@@ -388,7 +386,7 @@ async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 
 	if let Some(message) = recipiant_message {
 		dm_embed(
-			handler_data,
+			handler_data.client,
 			Embed::standard().with_title("Payment").with_description(message),
 			handler_data.bot_data.account_owner(recipiant),
 		)
@@ -403,7 +401,7 @@ async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	let cheese_user = handler_data.bot_data.users.get_mut(&handler_data.user.id).unwrap();
 	if chrono::Utc::now() - cheese_user.last_pay < chrono::Duration::hours(15) {
 		let descripition = format!(
-			"You can claim this benefit only once per day. You have last claimed it {} hours ago",
+			"You can claim this benefit only once per day. You have last claimed it {} hours ago.",
 			(chrono::Utc::now() - cheese_user.last_pay).num_hours()
 		);
 		respond_with_embed(
@@ -654,6 +652,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 	tokio::spawn(read_websocket(read, send_ev.clone()));
 
 	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::SaveFile));
+	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::WealthTax));
 
 	while let Some(main_message) = recieve_ev.next().await {
 		match main_message {
@@ -699,7 +698,51 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 					.await
 					.unwrap();
 			}
-			MainMessage::WealthTax => todo!(),
+			MainMessage::WealthTax => {
+				if (chrono::Utc::now() - bot_data.last_wealth_tax) > chrono::Duration::hours(20) {
+					bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24);
+					info!("Applying wealth tax.");
+
+					// Applies welth tax to a specific account returning the log information for the user
+					fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>) -> String {
+						let multiplier = bot_data.wealth_tax / 100.;
+						let account = bot_data.account(account);
+						let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
+						account.balance -= tax;
+
+						let result = format!(
+							"\n{:20} -{:9} {}",
+							name.unwrap_or(&account.name),
+							format_cheesecoin(tax),
+							format_cheesecoin(account.balance)
+						);
+						bot_data.organisation_accounts.get_mut(&TREASURY).unwrap().balance += tax;
+						result
+					}
+					let users = (&bot_data).users.keys().into_iter().map(|x| x.clone()).collect::<Vec<_>>();
+					for user_id in users {
+						let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
+
+						result += &apply_wealth_tax_account(bot_data, bot_data.users[&user_id].account.clone(), Some("Personal"));
+
+						for org in bot_data.users[&user_id].organisations.clone() {
+							result += &apply_wealth_tax_account(bot_data, org, None);
+						}
+
+						let description = format!(
+							"Wealth tax has been applied at `{:.2}%`.\n\n**Payments**\n```\n{}```",
+							bot_data.wealth_tax, result
+						);
+
+						dm_embed(
+							client,
+							Embed::standard().with_title("Wealth Tax").with_description(description),
+							user_id.clone(),
+						)
+						.await;
+					}
+				}
+			}
 			MainMessage::SaveFile => {
 				info!("Saving data");
 				std::fs::write(

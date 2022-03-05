@@ -1,15 +1,15 @@
 (
 	users: {
 		"737928480389333004": (
-			account: 2,
+			account: 1,
 			mp: true,
-			last_pay: "-262144-01-01T00:00:00Z",
+			last_pay: "2022-03-03T18:43:47.127943279Z",
 			organisations: [],
 		),
 		"630073509137350690": (
-			account: 1,
+			account: 2,
 			mp: true,
-			last_pay: "2022-03-03T18:21:24.762444281Z",
+			last_pay: "2022-03-03T17:46:43.140132233Z",
 			organisations: [
 				3,
 			],
@@ -21,14 +21,22 @@
 			balance: 0,
 		),
 		1: (
+			name: "i will eat you",
+			balance: 98,
+		),
+		2: (
 			name: "Käse",
-			balance: 200,
+			balance: 169,
 		),
 	},
 	organisation_accounts: {
+		3: (
+			name: "bob",
+			balance: 100,
+		),
 		0: (
 			name: "Treasury",
-			balance: 800,
+			balance: 36,
 		),
 		3: (
 			name: "blobby",
@@ -36,5 +44,6 @@
 		),
 	},
 	next_account: 4,
-	wealth_tax: 0.05,
+	wealth_tax: 5,
+	last_wealth_tax: "2022-03-04T18:43:47.127943279Z",
 )
