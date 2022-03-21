@@ -571,6 +571,11 @@ async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 
 	handler_data
 		.bot_data
+		.account(handler_data.bot_data.cheese_user(&handler_data.user).account)
+		.balance += handler_data.bot_data.organisation_accounts[&organisation].balance;
+
+	handler_data
+		.bot_data
 		.users
 		.get_mut(&handler_data.user.id)
 		.unwrap()
