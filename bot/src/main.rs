@@ -521,6 +521,37 @@ async fn organisation_transfer<'a>(handler_data: &mut HandlerData<'a>) {
 	.await;
 }
 
+async fn organisation_rename<'a>(handler_data: &mut HandlerData<'a>) {
+	let bot_data = &mut handler_data.bot_data;
+
+	let organisation = match account_option(bot_data, &handler_data.options["name"], BotData::account_owned, &handler_data.user).await {
+		Some(x) => x,
+		None => {
+			respond_with_embed(
+				handler_data,
+				Embed::standard().with_title("Payment").with_description("Invalid organisation name"),
+			)
+			.await;
+			return;
+		}
+	};
+
+	let org_name = handler_data.options["new"].as_str();
+
+	let description = format!(
+		"Renamed {} to {}",
+		handler_data.bot_data.organisation_accounts[&organisation].name, org_name
+	);
+
+	handler_data.bot_data.organisation_accounts.get_mut(&organisation).unwrap().name = org_name;
+
+	respond_with_embed(
+		handler_data,
+		Embed::standard().with_title("Transferred organisation").with_description(description),
+	)
+	.await;
+}
+
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
 	let command_type = interaction.interaction_type.clone();
 	let (command, focused, mut handler_data) = construct_handler_data(interaction, client, bot_data);
@@ -532,6 +563,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"pay" => pay(&mut handler_data).await,
 				"organisation create" => organisation_create(&mut handler_data).await,
 				"organisation transfer" => organisation_transfer(&mut handler_data).await,
+				"organisation rename" => organisation_rename(&mut handler_data).await,
 				"claim rollcall" => rollcall(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
@@ -552,7 +584,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 					.personal_account(&handler_data.user)
 					.chain(handler_data.bot_data.owned_orgs(&handler_data.user))
 					.collect(),
-				("organisation transfer", "name") => handler_data.bot_data.owned_orgs(&handler_data.user).collect(),
+				("organisation transfer", "name") | ("organisation rename", "name") => handler_data.bot_data.owned_orgs(&handler_data.user).collect(),
 				("organisation transfer", "owner") => handler_data.bot_data.non_self_people(&handler_data.user).collect(),
 				_ => {
 					warn!(r#"Invalid autocomplete for "{}" on command "{}""#, command, name);
@@ -809,7 +841,13 @@ async fn create_commands(client: &mut DiscordClient, application_id: &String) {
 					.with_name("transfer")
 					.with_description("Transfer an organisation")
 				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
-				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("owner").with_required(true).with_description("The new owner of the organisation").with_autocomplete(true))),
+				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("owner").with_required(true).with_description("The new owner of the organisation").with_autocomplete(true)))
+				.with_options(ApplicationCommandOption::new()
+					.with_name("rename")
+					.with_description("Rename an organisation")
+					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
+					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("new").with_required(true).with_description("The new name of the organisation"))
+				),
 			).with_commands(
 			ApplicationCommand::new()
 				.with_command_type(CommandType::Chat)
