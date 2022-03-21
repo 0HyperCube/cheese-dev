@@ -622,6 +622,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				("organisation transfer", "name") | ("organisation rename", "name") | ("organisation delete", "name") => {
 					handler_data.bot_data.owned_orgs(&handler_data.user).collect()
 				}
+				("organisation transfer", "name") => handler_data.bot_data.owned_orgs(&handler_data.user).collect(),
 				("organisation transfer", "owner") => handler_data.bot_data.non_self_people(&handler_data.user).collect(),
 				_ => {
 					warn!(r#"Invalid autocomplete for "{}" on command "{}""#, command, name);
@@ -889,6 +890,7 @@ async fn create_commands(client: &mut DiscordClient, application_id: &String) {
 					.with_description("Delete an organisation")
 					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
 				),
+				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("owner").with_required(true).with_description("The new owner of the organisation").with_autocomplete(true))),
 			).with_commands(
 			ApplicationCommand::new()
 				.with_command_type(CommandType::Chat)
