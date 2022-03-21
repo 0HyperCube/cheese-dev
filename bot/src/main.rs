@@ -547,7 +547,41 @@ async fn organisation_rename<'a>(handler_data: &mut HandlerData<'a>) {
 
 	respond_with_embed(
 		handler_data,
-		Embed::standard().with_title("Transferred organisation").with_description(description),
+		Embed::standard().with_title("Renamed organisation").with_description(description),
+	)
+	.await;
+}
+
+async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
+	let bot_data = &mut handler_data.bot_data;
+
+	let organisation = match account_option(bot_data, &handler_data.options["name"], BotData::account_owned, &handler_data.user).await {
+		Some(x) => x,
+		None => {
+			respond_with_embed(
+				handler_data,
+				Embed::standard().with_title("Payment").with_description("Invalid organisation name"),
+			)
+			.await;
+			return;
+		}
+	};
+
+	let description = format!("Deleted {}", handler_data.bot_data.organisation_accounts[&organisation].name);
+
+	handler_data
+		.bot_data
+		.users
+		.get_mut(&handler_data.user.id)
+		.unwrap()
+		.organisations
+		.retain(|o| o != &organisation);
+
+	handler_data.bot_data.organisation_accounts.remove(&organisation);
+
+	respond_with_embed(
+		handler_data,
+		Embed::standard().with_title("Deleted organisation").with_description(description),
 	)
 	.await;
 }
@@ -564,6 +598,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"organisation create" => organisation_create(&mut handler_data).await,
 				"organisation transfer" => organisation_transfer(&mut handler_data).await,
 				"organisation rename" => organisation_rename(&mut handler_data).await,
+				"organisation delete" => organisation_delete(&mut handler_data).await,
 				"claim rollcall" => rollcall(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
@@ -584,7 +619,9 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 					.personal_account(&handler_data.user)
 					.chain(handler_data.bot_data.owned_orgs(&handler_data.user))
 					.collect(),
-				("organisation transfer", "name") | ("organisation rename", "name") => handler_data.bot_data.owned_orgs(&handler_data.user).collect(),
+				("organisation transfer", "name") | ("organisation rename", "name") | ("organisation delete", "name") => {
+					handler_data.bot_data.owned_orgs(&handler_data.user).collect()
+				}
 				("organisation transfer", "owner") => handler_data.bot_data.non_self_people(&handler_data.user).collect(),
 				_ => {
 					warn!(r#"Invalid autocomplete for "{}" on command "{}""#, command, name);
@@ -846,7 +883,11 @@ async fn create_commands(client: &mut DiscordClient, application_id: &String) {
 					.with_name("rename")
 					.with_description("Rename an organisation")
 					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
-					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("new").with_required(true).with_description("The new name of the organisation"))
+					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("new").with_required(true).with_description("The new name of the organisation")))
+				.with_options(ApplicationCommandOption::new()
+					.with_name("delete")
+					.with_description("Delete an organisation")
+					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
 				),
 			).with_commands(
 			ApplicationCommand::new()
