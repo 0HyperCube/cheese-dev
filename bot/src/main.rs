@@ -780,7 +780,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 					info!("Applying wealth tax.");
 
 					// Applies welth tax to a specific account returning the log information for the user
-					fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>) -> String {
+					fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>) -> (String, u32) {
 						let multiplier = bot_data.wealth_tax / 100.;
 						let account = bot_data.account(account);
 						let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
@@ -793,16 +793,26 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 							format_cheesecoin(account.balance)
 						);
 						bot_data.organisation_accounts.get_mut(&TREASURY).unwrap().balance += tax;
-						result
+						(result, tax)
 					}
+
 					let users = (&bot_data).users.keys().into_iter().map(|x| x.clone()).collect::<Vec<_>>();
+					let mut total_tax = 0;
+
 					for user_id in users {
 						let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
 
-						result += &apply_wealth_tax_account(bot_data, bot_data.users[&user_id].account.clone(), Some("Personal"));
+						let (next, tax) = &apply_wealth_tax_account(bot_data, bot_data.users[&user_id].account.clone(), Some("Personal"));
+						result += next;
+						total_tax += tax;
 
 						for org in bot_data.users[&user_id].organisations.clone() {
-							result += &apply_wealth_tax_account(bot_data, org, None);
+							if org == 0 {
+								continue;
+							}
+							let (next, tax) = &apply_wealth_tax_account(bot_data, org, None);
+							result += next;
+							total_tax += tax;
 						}
 
 						let description = format!(
@@ -816,6 +826,20 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 							user_id.clone(),
 						)
 						.await;
+					}
+
+					for (user_id, user) in &mut bot_data.users {
+						if user.organisations.contains(&0) {
+							let description = format!("Total wealth tax collected: `{}`cc", total_tax);
+
+							dm_embed(
+								client,
+								Embed::standard().with_title("Total Wealth Tax").with_description(description),
+								user_id.clone(),
+							)
+							.await;
+							break;
+						}
 					}
 				}
 			}
