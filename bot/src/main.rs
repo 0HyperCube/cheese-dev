@@ -830,7 +830,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 					for (user_id, user) in &mut bot_data.users {
 						if user.organisations.contains(&0) {
-							let description = format!("Total wealth tax collected: `{}`cc", total_tax);
+							let description = format!("Total wealth tax collected: {}", format_cheesecoin(total_tax));
 
 							dm_embed(
 								client,
