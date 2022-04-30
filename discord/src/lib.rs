@@ -1,5 +1,3 @@
-#![feature(derive_default_enum)]
-
 #[macro_use]
 extern crate proc_macros;
 

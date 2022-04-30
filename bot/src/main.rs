@@ -13,7 +13,6 @@ const TREASURY: AccountId = 0;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CheeseUser {
 	account: AccountId,
-	mp: bool,
 	last_pay: chrono::DateTime<chrono::Utc>,
 	organisations: Vec<AccountId>,
 }
@@ -192,7 +191,6 @@ fn construct_handler_data<'a>(
 			user.id.clone(),
 			CheeseUser {
 				account: bot_data.next_account,
-				mp: true,
 				last_pay: chrono::MIN_DATETIME,
 				organisations: Vec::new(),
 			},
@@ -398,6 +396,25 @@ async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 
 /// Handles the `/claim rollcall` command
 async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
+	const MP_ROLL: &str = "912022899806855178";
+
+	let is_mp = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id)
+		.await
+		.map_or(false, |user| {
+			info!("User {user:?}");
+			user.roles.contains(&MP_ROLL.to_string())
+		});
+
+	if !is_mp {
+		let descripition = "You can only claim this benefit if you are an MP (if you are just ask to get the MP roll).";
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Claim Rollcall").with_description(descripition),
+		)
+		.await;
+		return;
+	}
+
 	let cheese_user = handler_data.bot_data.users.get_mut(&handler_data.user.id).unwrap();
 	if chrono::Utc::now() - cheese_user.last_pay < chrono::Duration::hours(15) {
 		let descripition = format!(
@@ -449,7 +466,7 @@ async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 	handler_data.bot_data.next_account += 1;
 
 	let description = format!(
-		"Sucessfully created {} which is owned by {}",
+		"Successfully created {} which is owned by {}",
 		org_name,
 		handler_data.bot_data.personal_account_name(&handler_data.user)
 	);
