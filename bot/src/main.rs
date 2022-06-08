@@ -110,7 +110,7 @@ impl BotData {
 	pub fn personal_accounts(&self) -> impl Iterator<Item = (String, AccountId)> + '_ {
 		self.personal_accounts
 			.iter()
-			.map(|(id, account)| (account.name.clone() + " (Personal)", *id))
+			.map(|(id, account)| (account.name.clone() + " (Twaddle)", *id))
 	}
 	/// List all people names (with added suffix) and ids
 	pub fn people(&self) -> impl Iterator<Item = (String, AccountId)> + '_ {
