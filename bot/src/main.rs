@@ -1,5 +1,7 @@
+#![feature(int_roundings)]
 use std::collections::HashMap;
 
+use chrono::{Datelike, Duration};
 use discord::{async_channel::Sender, *};
 use serde::{Deserialize, Serialize};
 
@@ -33,6 +35,11 @@ pub struct BotData {
 	pub next_account: AccountId,
 	pub wealth_tax: f64,
 	pub last_wealth_tax: chrono::DateTime<chrono::Utc>,
+	pub election: HashMap<String, Vec<String>>,
+	pub previous_time: chrono::DateTime<chrono::Utc>,
+	pub previous_results: String,
+	#[serde(skip)]
+	pub changed: bool,
 }
 
 impl Default for BotData {
@@ -51,6 +58,10 @@ impl Default for BotData {
 			next_account: 1,
 			wealth_tax: 0.05,
 			last_wealth_tax: chrono::Utc::now(),
+			election: HashMap::new(),
+			previous_time: chrono::Utc::now(),
+			previous_results: "No previous results".into(),
+			changed: true,
 		}
 	}
 }
@@ -105,17 +116,26 @@ impl BotData {
 		self.personal_accounts.iter().map(|(_, a)| a.balance).sum::<u32>() + self.organisation_accounts.iter().map(|(_, a)| a.balance).sum::<u32>()
 	}
 
+	pub fn option_suffix(&self, id: &AccountId, default: &'static str) -> &'static str {
+		match id {
+			0 => " (Cheeselandic Government)",
+			737928480389333004 => " (Dictator)",
+			12 => " (Go Consulting Enteprises)",
+			_ => default,
+		}
+	}
+
 	/// List all personal account names (with added suffix) and ids
 	pub fn personal_accounts(&self) -> impl Iterator<Item = (String, AccountId)> + '_ {
 		self.personal_accounts
 			.iter()
-			.map(|(id, account)| (account.name.clone() + " (Personal)", *id))
+			.map(|(id, account)| (account.name.clone() + self.option_suffix(id, " (Personal)"), *id))
 	}
 	/// List all people names (with added suffix) and ids
 	pub fn people(&self) -> impl Iterator<Item = (String, AccountId)> + '_ {
 		self.personal_accounts
 			.iter()
-			.map(|(id, account)| (account.name.clone() + " (Person)", *id))
+			.map(|(id, account)| (account.name.clone() + self.option_suffix(id, " (Person)"), *id))
 	}
 	/// List all non-self people names (with added suffix) and ids
 	pub fn non_self_people(&self, user: &User) -> impl Iterator<Item = (String, AccountId)> + '_ {
@@ -123,13 +143,13 @@ impl BotData {
 		self.personal_accounts
 			.iter()
 			.filter(|(id, _)| **id != user.account)
-			.map(|(id, account)| (account.name.clone() + " (Person)", *id))
+			.map(|(id, account)| (account.name.clone() + self.option_suffix(id, " (Person)"), *id))
 	}
 	/// List all organisation account names (with added suffix) and ids
 	pub fn organisation_accounts(&self) -> impl Iterator<Item = (String, AccountId)> + '_ {
 		self.organisation_accounts
 			.iter()
-			.map(|(id, account)| (account.name.clone() + " (Organisation)", *id))
+			.map(|(id, account)| (account.name.clone() + self.option_suffix(id, " (Organisation)"), *id))
 	}
 	/// List the user's personal account as "Personal"
 	pub fn personal_account(&self, user: &User) -> impl Iterator<Item = (String, AccountId)> + '_ {
@@ -141,7 +161,7 @@ impl BotData {
 			.organisations
 			.iter()
 			.map(|org| (org, &self.organisation_accounts[org]))
-			.map(|(id, account)| (account.name.clone() + " (Organisation)", *id))
+			.map(|(id, account)| (account.name.clone() + self.option_suffix(id, " (Organisation)"), *id))
 	}
 }
 
@@ -170,14 +190,16 @@ fn init_logger() {
 	info!("Initalised logger!");
 }
 
+struct ConstructedData<'a> {
+	command: String,
+	focused: Option<InteractionDataOption>,
+	handler_data: HandlerData<'a>,
+}
+
 /// Construct the data handler (for implementing commands) from the specified interaction
 ///
 /// This creates a new account if necessary, as well as flattenning subcommands into a space seperated string and finding the focused field
-fn construct_handler_data<'a>(
-	mut interaction: Interaction,
-	client: &'a mut DiscordClient,
-	bot_data: &'a mut BotData,
-) -> (String, Option<InteractionDataOption>, HandlerData<'a>) {
+fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut DiscordClient, bot_data: &'a mut BotData) -> ConstructedData<'a> {
 	// Extract the user from the interaction (if in guild, then interaction["member"]["user"], if in dms then interaction["user"])
 	let user = (interaction)
 		.user
@@ -207,9 +229,22 @@ fn construct_handler_data<'a>(
 
 	let mut data = interaction.data.take().unwrap();
 
+	if let Some(custom_id) = data.custom_id.take() {
+		return ConstructedData {
+			command: custom_id,
+			focused: None,
+			handler_data: HandlerData {
+				client,
+				bot_data,
+				interaction,
+				user,
+				options: HashMap::new(),
+			},
+		};
+	}
 	// Extracts the command name (including sub commands)
 	let mut options = data.options.take().unwrap_or(Vec::new());
-	let mut command = data.name;
+	let mut command = data.name.unwrap();
 	while options.len() > 0
 		&& (options[0].option_type == CommandOptionType::SubCommandGroup || options[0].option_type == CommandOptionType::SubCommand)
 	{
@@ -226,31 +261,34 @@ fn construct_handler_data<'a>(
 
 	info!("Command name {}, options {:?}", command, options.keys());
 
-	(
+	ConstructedData {
 		command,
 		focused,
-		HandlerData {
+		handler_data: HandlerData {
 			client,
 			bot_data,
 			interaction,
 			user,
 			options,
 		},
-	)
+	}
+}
+
+/// Utility function for responding to an interaction with a message
+async fn respond_with_message<'a>(handler_data: &mut HandlerData<'a>, message: ChannelMessage) {
+	InteractionCallback::new(InteractionResponse::ChannelMessageWithSource { data: message })
+		.post_respond(
+			handler_data.client,
+			handler_data.interaction.id.clone(),
+			handler_data.interaction.token.clone(),
+		)
+		.await
+		.unwrap();
 }
 
 /// Utility function for responding to an interaction with an embed
 async fn respond_with_embed<'a>(handler_data: &mut HandlerData<'a>, embed: Embed) {
-	InteractionCallback::new(InteractionResponse::ChannelMessageWithSource {
-		data: ChannelMessage::new().with_embeds(embed),
-	})
-	.post_respond(
-		handler_data.client,
-		handler_data.interaction.id.clone(),
-		handler_data.interaction.token.clone(),
-	)
-	.await
-	.unwrap();
+	respond_with_message(handler_data, ChannelMessage::new().with_embeds(embed)).await;
 }
 
 /// Utility function for dming a discord user an embed
@@ -444,6 +482,88 @@ async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	}
 }
 
+/// Handles the `/parliament run` and `/parliament stop running` commands
+async fn set_running<'a>(handler_data: &mut HandlerData<'a>, new_running: bool) {
+	let already_running = handler_data.bot_data.election.contains_key(&handler_data.user.id);
+
+	let descripition = match (already_running, new_running) {
+		(false, false) => "You were already not running.",
+		(true, true) => "You are already running.",
+		(false, true) => {
+			handler_data.bot_data.election.insert(handler_data.user.id.clone(), Vec::new());
+			"You are now running!"
+		}
+		(true, false) => {
+			handler_data.bot_data.election.remove(&handler_data.user.id);
+			"You are no longer running. All of your votes have been removed."
+		}
+	};
+	let title = match new_running {
+		true => "Parliament Run",
+		false => "Parliament Stop Running",
+	};
+	respond_with_embed(handler_data, Embed::standard().with_title(title).with_description(descripition)).await;
+}
+/// Handles the `/parliament vote` command
+async fn vote<'a>(handler_data: &mut HandlerData<'a>) {
+	let value = if handler_data.bot_data.election.len() == 0 {
+		"\nNo candidates"
+	} else {
+		""
+	};
+	let mut message = ChannelMessage::new().with_content(format!("Vote for your candidate:{value}"));
+	let mut candidates = handler_data.bot_data.election.keys();
+	let rows = handler_data.bot_data.election.len().div_ceil(5);
+	for row in 0..rows {
+		let mut action_row = ActionRows::new();
+		for _col in 0..((handler_data.bot_data.election.len() - row * 5).min(5)) {
+			let candidate = candidates.next().unwrap();
+			let account = &handler_data.bot_data.personal_accounts[&handler_data.bot_data.users[candidate].account];
+			action_row = action_row.with_components(
+				Button::new()
+					.with_style(ButtonStyle::Secondary)
+					.with_label(&account.name)
+					.with_custom_id(format!("vote{candidate}")),
+			);
+		}
+
+		message = message.with_components(action_row);
+	}
+
+	respond_with_message(handler_data, message).await;
+}
+
+async fn view_results<'a>(handler_data: &mut HandlerData<'a>) {
+	let previous_time = handler_data.bot_data.previous_time;
+	let date = previous_time - Duration::hours((previous_time.weekday().number_from_sunday() % 7) as i64 * 24);
+	let formatted_date = date.timestamp();
+	let data = &handler_data.bot_data.previous_results;
+	let description = format!("Results for election on <t:{formatted_date}:D> in csv format:\n```\n{data}```");
+	respond_with_embed(
+		handler_data,
+		Embed::standard().with_title("Election results").with_description(description),
+	)
+	.await;
+}
+
+async fn cast_vote<'a>(handler_data: &mut HandlerData<'a>, new_candidate: &str) {
+	let embed = if handler_data.bot_data.election.contains_key(new_candidate) {
+		let voter = &handler_data.user.id;
+		for (candidate, votes) in &mut handler_data.bot_data.election {
+			votes.retain(|e| e != voter);
+			if candidate == new_candidate {
+				votes.push(voter.clone());
+			}
+		}
+		Embed::standard().with_title("Vote cast")
+	} else {
+		Embed::standard()
+			.with_title("Vote failed")
+			.with_description("Your candidate is no longer running")
+	};
+	respond_with_message(handler_data, ChannelMessage::new().with_embeds(embed).with_flags(1_u32 << 6)).await;
+}
+
 /// Handles the `/orgainsation create` command
 async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 	let org_name = handler_data.options["name"].as_str();
@@ -609,8 +729,13 @@ async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 }
 
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
+	bot_data.changed = true;
 	let command_type = interaction.interaction_type.clone();
-	let (command, focused, mut handler_data) = construct_handler_data(interaction, client, bot_data);
+	let ConstructedData {
+		command,
+		focused,
+		mut handler_data,
+	} = construct_handler_data(interaction, client, bot_data);
 	match command_type {
 		InteractionType::ApplicationCommand => {
 			match command.as_str() {
@@ -622,8 +747,17 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"organisation rename" => organisation_rename(&mut handler_data).await,
 				"organisation delete" => organisation_delete(&mut handler_data).await,
 				"claim rollcall" => rollcall(&mut handler_data).await,
+				"parliament run" => set_running(&mut handler_data, true).await,
+				"parliament stop running" => set_running(&mut handler_data, false).await,
+				"parliament vote" => vote(&mut handler_data).await,
+				"parliament view results" => view_results(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
+		}
+		InteractionType::MessageComponent => {
+			if command.starts_with("vote") {
+				cast_vote(&mut handler_data, &command[4..]).await
+			}
 		}
 		InteractionType::ApplicationCommandAutocomplete => {
 			let InteractionDataOption { name, value, .. } = focused.unwrap();
@@ -658,7 +792,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				.map(|(_, value)| value)
 				.map(|(name, id)| {
 					ApplicationCommandOptionChoice::new()
-						.with_name(name)
+						.with_name(&name[(name.len() as i32 -100).max(0) as usize ..name.len()])
 						.with_value(OptionType::String(id.to_string()))
 				})
 				.collect::<Vec<_>>();
@@ -681,6 +815,7 @@ enum MainMessage {
 	Heartbeat,
 	WealthTax,
 	SaveFile,
+	CheckElection,
 }
 
 async fn read_websocket(mut read: Read, send_ev: Sender<MainMessage>) {
@@ -707,6 +842,7 @@ async fn dispatch_msg(send_ev: Sender<MainMessage>, interval: u64, msg: MainMess
 	loop {
 		interval.tick().await;
 		if send_ev.send(msg.clone()).await.is_err() {
+			warn!("Channel full");
 			return;
 		}
 	}
@@ -727,6 +863,7 @@ async fn run_loop() {
 	});
 
 	loop {
+		warn!("Running in run loop");
 		run(&mut client, &mut bot_data, path).await;
 	}
 }
@@ -746,6 +883,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::SaveFile));
 	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::WealthTax));
+	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::CheckElection));
 
 	while let Some(main_message) = recieve_ev.next().await {
 		match main_message {
@@ -777,8 +915,6 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 							.with_properties(ConnectionProperties::new().with_device("Cheese")),
 					};
 
-					info!("Recieved hello {:?}, sending identify {:?}", d, identify);
-
 					send_outgoing_message.send(serde_json::to_string(&identify).unwrap()).await.unwrap();
 					tokio::spawn(dispatch_msg(send_ev.clone(), d.heartbeat_interval, MainMessage::Heartbeat));
 				}
@@ -794,6 +930,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 			MainMessage::WealthTax => {
 				if (chrono::Utc::now() - bot_data.last_wealth_tax) > chrono::Duration::hours(20) {
 					bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24);
+					bot_data.changed = true;
 					info!("Applying wealth tax.");
 
 					// Applies welth tax to a specific account returning the log information for the user
@@ -861,96 +998,194 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 				}
 			}
 			MainMessage::SaveFile => {
-				info!("Saving data");
-				std::fs::write(
-					path,
-					ron::ser::to_string_pretty(bot_data, ron::ser::PrettyConfig::new().indentor(String::from("\t"))).unwrap(),
-				)
-				.unwrap();
+				if bot_data.changed {
+					bot_data.changed = false;
+					let new = ron::ser::to_string_pretty(bot_data, ron::ser::PrettyConfig::new().indentor(String::from("\t"))).unwrap();
+					std::fs::write(path, new).unwrap();
+				}
+			}
+			MainMessage::CheckElection => {
+				let days_since = ((chrono::Utc::now() - bot_data.previous_time).num_hours()) / 24;
+				let days_from_sunday = chrono::Utc::now().weekday().num_days_from_sunday();
+
+				if days_from_sunday > 2 || days_since < 4 {
+					continue;
+				}
+				bot_data.previous_time = chrono::Utc::now();
+				bot_data.previous_results = String::new();
+
+				let mut votes = bot_data.election.iter().collect::<Vec<_>>();
+				votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
+				for (user_id, votes) in votes {
+					let cheese_user = bot_data.users.get_mut(user_id).unwrap();
+					let name = &bot_data.personal_accounts[&cheese_user.account].name;
+					bot_data.previous_results += name;
+					bot_data.previous_results += ", ";
+					bot_data.previous_results += &votes.len().to_string();
+					bot_data.previous_results += "\n";
+				}
+				for (_, votes) in bot_data.election.iter_mut() {
+					*votes = Vec::new();
+				}
 			}
 		}
 	}
 }
 
 async fn create_commands(client: &mut DiscordClient, application_id: &String) {
-	ApplicationCommandList::new()
-		.with_commands(
-			ApplicationCommand::new()
-				.with_command_type(CommandType::Chat)
-				.with_name("about")
-				.with_description("Description of the bot."),
+	let about = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("about")
+		.with_description("Description of the bot.");
+	let balances = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("balances")
+		.with_description("All of your balances.");
+	let pay = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("pay")
+		.with_description("Give someone cheesecoins.")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::String)
+				.with_name("recipiant")
+				.with_description("Recipiant of the payment")
+				.with_required(true)
+				.with_autocomplete(true),
 		)
-		.with_commands(
-			ApplicationCommand::new()
-				.with_command_type(CommandType::Chat)
-				.with_name("balances")
-				.with_description("All of your balances."),
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::Number)
+				.with_name("cheesecoin")
+				.with_description("Number of cheesecoin")
+				.with_required(true),
 		)
-		.with_commands(
-			ApplicationCommand::new()
-				.with_command_type(CommandType::Chat)
-				.with_name("pay")
-				.with_description("Give someone cheesecoins.")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::String)
+				.with_name("from")
+				.with_description("The account the cheesecoins are from")
+				.with_required(true)
+				.with_autocomplete(true),
+		);
+	let organisation = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("organisation")
+		.with_description("Organisation commands")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("create")
+				.with_description("Create an organisation.")
 				.with_options(
 					ApplicationCommandOption::new()
-					.with_option_type(CommandOptionType::String)
-						.with_name("recipiant").with_description("Recipiant of the payment")
-						.with_required(true).with_autocomplete(true),
-				)
-				.with_options(
-					ApplicationCommandOption::new()
-						.with_option_type(CommandOptionType::Number)
-						.with_name("cheesecoin")
-						.with_description("Number of cheesecoin")
-						.with_required(true),
-				)
-				.with_options(
-					ApplicationCommandOption::new()
-					.with_option_type(CommandOptionType::String)
-						.with_name("from").with_description("The account the cheesecoins are from")
-						.with_required(true).with_autocomplete(true),
-				)
-		)
-		.with_commands(
-			ApplicationCommand::new()
-				.with_command_type(CommandType::Chat)
-				.with_name("organisation")
-				.with_description("Organisation commands")
-				.with_options(ApplicationCommandOption::new()
-					.with_name("create")
-					.with_description("Create an organisation.")
-				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the new organisation")))
-				.with_options(ApplicationCommandOption::new()
-					.with_name("transfer")
-					.with_description("Transfer an organisation")
-				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
-				.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("owner").with_required(true).with_description("The new owner of the organisation").with_autocomplete(true)))
-				.with_options(ApplicationCommandOption::new()
-					.with_name("rename")
-					.with_description("Rename an organisation")
-					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
-					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("new").with_required(true).with_description("The new name of the organisation")))
-				.with_options(ApplicationCommandOption::new()
-					.with_name("delete")
-					.with_description("Delete an organisation")
-					.with_options(ApplicationCommandOption::new().with_option_type(CommandOptionType::String).with_name("name").with_required(true).with_description("The name of the organisation").with_autocomplete(true))
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the new organisation"),
 				),
-			).with_commands(
-			ApplicationCommand::new()
-				.with_command_type(CommandType::Chat)
-				.with_name("claim")
-				.with_description("Claim commands")
-				.with_options(ApplicationCommandOption::new()
-					.with_name("rollcall")
-					.with_description("Claim your MP daily rollcall")
-
-		))
-		// .with_commands(
-		// 	ApplicationCommand::new()
-		// 		.with_command_type(CommandType::Chat)
-		// 		.with_name("")
-		// 		.with_description(""),
-		// )
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("transfer")
+				.with_description("Transfer an organisation")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the organisation")
+						.with_autocomplete(true),
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("owner")
+						.with_required(true)
+						.with_description("The new owner of the organisation")
+						.with_autocomplete(true),
+				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("rename")
+				.with_description("Rename an organisation")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the organisation")
+						.with_autocomplete(true),
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("new")
+						.with_required(true)
+						.with_description("The new name of the organisation"),
+				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("delete")
+				.with_description("Delete an organisation")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the organisation")
+						.with_autocomplete(true),
+				),
+		);
+	let rollcall = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("claim")
+		.with_description("Claim commands")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("rollcall")
+				.with_description("Claim your MP daily rollcall"),
+		);
+	let parliament = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("parliament")
+		.with_description("Parliament commands")
+		.with_options(ApplicationCommandOption::new().with_name("run").with_description("Run as candidate."))
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::SubCommandGroup)
+				.with_name("stop")
+				.with_description("Stop doing something.")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_name("running")
+						.with_description("Stop running as candidate"),
+				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("vote")
+				.with_description("Vote for a candidate (or change your vote)."),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::SubCommandGroup)
+				.with_name("view")
+				.with_description("View something.")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_name("results")
+						.with_description("View results of last election."),
+				),
+		);
+	ApplicationCommandList::new()
+		.with_commands(about)
+		.with_commands(balances)
+		.with_commands(pay)
+		.with_commands(rollcall)
+		.with_commands(organisation)
+		.with_commands(parliament)
 		.put_bulk_override_global(client, application_id)
 		.await
 		.unwrap();

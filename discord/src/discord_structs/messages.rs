@@ -32,4 +32,5 @@ pub struct ChannelMessage {
 	content: Option<String>,
 	embeds: Option<Vec<Embed>>,
 	components: Option<Vec<MessageComponent>>,
+	flags: Option<u32>,
 }
