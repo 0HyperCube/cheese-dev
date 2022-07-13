@@ -434,7 +434,7 @@ async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 
 /// Handles the `/claim rollcall` command
 async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
-	const MP_ROLL: &str = "912022899806855178";
+	const MP_ROLL: &str = "985804444237172797";
 
 	let is_mp = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id)
 		.await
