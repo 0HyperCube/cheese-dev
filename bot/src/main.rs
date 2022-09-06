@@ -928,8 +928,8 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 					.unwrap();
 			}
 			MainMessage::WealthTax => {
-				if (chrono::Utc::now() - bot_data.last_wealth_tax) > chrono::Duration::hours(20) {
-					bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24);
+				if (chrono::Utc::now() - bot_data.last_wealth_tax) > chrono::Duration::hours(24 * 7 - 4) {
+					bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24 * 7);
 					bot_data.changed = true;
 					info!("Applying wealth tax.");
 
