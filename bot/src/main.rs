@@ -35,6 +35,9 @@ pub struct BotData {
 	pub next_account: AccountId,
 	pub wealth_tax: f64,
 	pub last_wealth_tax: chrono::DateTime<chrono::Utc>,
+	pub last_day: i32,
+	pub treasury_balances: Vec<u32>,
+	pub wealth_taxes: Vec<u32>,
 	pub election: HashMap<String, Vec<String>>,
 	pub previous_time: chrono::DateTime<chrono::Utc>,
 	pub previous_results: String,
@@ -58,6 +61,9 @@ impl Default for BotData {
 			next_account: 1,
 			wealth_tax: 0.05,
 			last_wealth_tax: chrono::Utc::now(),
+			last_day: chrono::Utc::now().num_days_from_ce(),
+			treasury_balances: Vec::new(),
+			wealth_taxes: Vec::new(),
 			election: HashMap::new(),
 			previous_time: chrono::Utc::now(),
 			previous_results: "No previous results".into(),
@@ -114,6 +120,14 @@ impl BotData {
 	/// Computes the total currency in circulation (for currency information in balances)
 	pub fn total_currency(&self) -> u32 {
 		self.personal_accounts.iter().map(|(_, a)| a.balance).sum::<u32>() + self.organisation_accounts.iter().map(|(_, a)| a.balance).sum::<u32>()
+	}
+
+	pub fn treasury_account(&self) -> &Account {
+		self.organisation_accounts.get(&TREASURY).unwrap()
+	}
+
+	pub fn treasury_account_mut(&mut self) -> &mut Account {
+		self.organisation_accounts.get_mut(&TREASURY).unwrap()
 	}
 
 	pub fn option_suffix(&self, id: &AccountId, default: &'static str) -> &'static str {
@@ -946,7 +960,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 							format_cheesecoin(tax),
 							format_cheesecoin(account.balance)
 						);
-						bot_data.organisation_accounts.get_mut(&TREASURY).unwrap().balance += tax;
+						bot_data.treasury_account_mut().balance += tax;
 						(result, tax)
 					}
 
@@ -982,10 +996,10 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 						.await;
 					}
 
+					bot_data.wealth_taxes.push(total_tax);
 					for (user_id, user) in &mut bot_data.users {
 						if user.organisations.contains(&0) {
 							let description = format!("The treasury has collected {} of wealth tax.", format_cheesecoin(total_tax));
-
 							dm_embed(
 								client,
 								Embed::standard().with_title("Total Wealth Tax").with_description(description),
@@ -995,6 +1009,31 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 							break;
 						}
 					}
+				}
+				let day = chrono::Utc::now().num_days_from_ce();
+				if day != bot_data.last_day {
+					bot_data.last_day = day;
+
+					let balance = bot_data.treasury_account().balance;
+					let description = format!(
+						"**Financial information for {}**\n```\n{:-20} {}\n{:-20} {:.2}%\n{:-20} {}\n```",
+						chrono::Utc::now().format("%d/%m/%Y"),
+						"Total Currency:",
+						format_cheesecoin(bot_data.total_currency()),
+						"Wealth Tax:",
+						bot_data.wealth_tax,
+						"Treasury Balance:",
+						format_cheesecoin(balance)
+					);
+					bot_data.treasury_balances.push(balance);
+					bot_data.changed = true;
+					let embed = Embed::standard().with_title("Daily Treasury Report").with_description(description);
+
+					ChannelMessage::new()
+						.with_embeds(embed)
+						.post_create(client, "1018447658685321266")
+						.await
+						.unwrap();
 				}
 			}
 			MainMessage::SaveFile => {
@@ -1013,6 +1052,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 				}
 				bot_data.previous_time = chrono::Utc::now();
 				bot_data.previous_results = String::new();
+				bot_data.changed = true;
 
 				let mut votes = bot_data.election.iter().collect::<Vec<_>>();
 				votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
