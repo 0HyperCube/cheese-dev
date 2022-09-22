@@ -1034,6 +1034,12 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 						.post_create(client, "1018447658685321266")
 						.await
 						.unwrap();
+
+					let days = 738435 - day;
+					let embed = Embed::standard()
+						.with_title(format!("Hangman in Rust due in {days} days!"))
+						.with_description(format!("Dear Twaddle,\n\nI write to you today to inform you of an approaching deadline that it would be wise not to miss. The program which you yourself have willingly resolved to craft, Hangman in Rust, is due in **{days} days**. Whilst this deadline has the possibility of being percieved as tyranical, relentless and inhumane, I can, in all confidence, assure you that it will be exceptionally benificial to you and all of those around you.\n\nYou have long wanted to learn a low level systems programming language, and have spoken of pursuing a path involving scholarship in Rust for an imoderate period of time. Completing something like this will increase your motivation and perseverance as well as your attention span, which is vital to getting hired at the cheesecake factory which I percieve is your life aim.\n\nBest wishes,\nCheese Bot."));
+					dm_embed(client, embed, "762325231925854231".to_string()).await;
 				}
 			}
 			MainMessage::SaveFile => {
