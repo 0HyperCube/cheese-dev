@@ -15,6 +15,7 @@ pub async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 
 	handler_data
 		.bot_data
+		.accounts
 		.organisation_accounts
 		.insert(handler_data.bot_data.next_account, account);
 
@@ -73,6 +74,7 @@ pub async fn organisation_transfer<'a>(handler_data: &mut HandlerData<'a>) {
 	handler_data
 		.bot_data
 		.users
+		.users
 		.iter_mut()
 		.find(|(_, user)| user.account == owner_account)
 		.unwrap()
@@ -90,7 +92,8 @@ pub async fn organisation_transfer<'a>(handler_data: &mut HandlerData<'a>) {
 
 	let description = format!(
 		"Transferred {} to {} successfully",
-		handler_data.bot_data.organisation_accounts[&organisation].name, handler_data.bot_data.personal_accounts[&owner_account].name
+		handler_data.bot_data.accounts.organisation_accounts[&organisation].name,
+		handler_data.bot_data.accounts.personal_accounts[&owner_account].name
 	);
 
 	respond_with_embed(
@@ -119,10 +122,10 @@ pub async fn organisation_rename<'a>(handler_data: &mut HandlerData<'a>) {
 
 	let description = format!(
 		"Renamed {} to {}",
-		handler_data.bot_data.organisation_accounts[&organisation].name, org_name
+		handler_data.bot_data.accounts.organisation_accounts[&organisation].name, org_name
 	);
 
-	handler_data.bot_data.organisation_accounts.get_mut(&organisation).unwrap().name = org_name;
+	handler_data.bot_data.accounts.organisation_accounts.get_mut(&organisation).unwrap().name = org_name;
 
 	respond_with_embed(
 		handler_data,
@@ -146,12 +149,13 @@ pub async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 		}
 	};
 
-	let description = format!("Deleted {}", handler_data.bot_data.organisation_accounts[&organisation].name);
+	let description = format!("Deleted {}", handler_data.bot_data.accounts.organisation_accounts[&organisation].name);
 
 	handler_data
 		.bot_data
+		.accounts
 		.account_mut(handler_data.bot_data.cheese_user(&handler_data.user).account)
-		.balance += handler_data.bot_data.organisation_accounts[&organisation].balance;
+		.balance += handler_data.bot_data.accounts.organisation_accounts[&organisation].balance;
 
 	handler_data
 		.bot_data
@@ -161,7 +165,7 @@ pub async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 		.organisations
 		.retain(|o| o != &organisation);
 
-	handler_data.bot_data.organisation_accounts.remove(&organisation);
+	handler_data.bot_data.accounts.organisation_accounts.remove(&organisation);
 
 	respond_with_embed(
 		handler_data,

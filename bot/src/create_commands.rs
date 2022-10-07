@@ -168,6 +168,14 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 						.with_required(true)
 						.with_description("The name of the bill")
 						.with_autocomplete(true),
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("from")
+						.with_description("The account the cheesecoins are paid from")
+						.with_required(true)
+						.with_autocomplete(true),
 				),
 		)
 		.with_options(
@@ -229,6 +237,7 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 		.with_commands(about)
 		.with_commands(balances)
 		.with_commands(pay)
+		.with_commands(bills)
 		.with_commands(rollcall)
 		.with_commands(organisation)
 		.with_commands(parliament)

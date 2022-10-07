@@ -1,5 +1,5 @@
 (
-	users:(users: {
+	users: {
 		"758042322364792974": (
 			account: 24,
 			last_pay: "-262144-01-01T00:00:00Z",
@@ -80,8 +80,8 @@
 				25,
 			],
 		),
-	}),
-	accounts:(personal_accounts: {
+	},
+	personal_accounts: {
 		24: (
 			name: "The_Toppat_Man",
 			balance: 2504,
@@ -227,7 +227,7 @@
 			name: "parliament",
 			balance: 786,
 		),
-	},),
+	},
 	bills: {
 		59: (
 			name: "Lawn Mowing",

@@ -30,11 +30,11 @@ pub async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
 	let cheese_user = handler_data.bot_data.cheese_user(&handler_data.user);
 
 	// Add their personal account to the resulting string
-	description += &format_account(&handler_data.bot_data.personal_accounts[&cheese_user.account]);
+	description += &format_account(&handler_data.bot_data.accounts.personal_accounts[&cheese_user.account]);
 
 	// Add their organisations to the resulting string
 	for account in &cheese_user.organisations {
-		description += &format_account(&handler_data.bot_data.organisation_accounts[&account])
+		description += &format_account(&handler_data.bot_data.accounts.organisation_accounts[&account])
 	}
 
 	description += "```";
@@ -71,7 +71,7 @@ pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 		dm_embed(
 			handler_data.client,
 			Embed::standard().with_title("Payment").with_description(message),
-			handler_data.bot_data.account_owner(recipiant),
+			handler_data.bot_data.users.account_owner(recipiant),
 		)
 		.await;
 	}
@@ -100,7 +100,7 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 		return;
 	}
 
-	let cheese_user = handler_data.bot_data.users.get_mut(&handler_data.user.id).unwrap();
+	let cheese_user = handler_data.bot_data.users.users.get_mut(&handler_data.user.id).unwrap();
 	if chrono::Utc::now() - cheese_user.last_pay < chrono::Duration::hours(15) {
 		let descripition = format!(
 			"You can claim this benefit only once per day. You have last claimed it {} hours ago.",

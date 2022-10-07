@@ -40,7 +40,7 @@ pub async fn vote<'a>(handler_data: &mut HandlerData<'a>) {
 		let mut action_row = ActionRows::new();
 		for _col in 0..((handler_data.bot_data.election.len() - row * 5).min(5)) {
 			let candidate = candidates.next().unwrap();
-			let account = &handler_data.bot_data.personal_accounts[&handler_data.bot_data.users[candidate].account];
+			let account = &handler_data.bot_data.accounts.personal_accounts[&handler_data.bot_data.users.users[candidate].account];
 			action_row = action_row.with_components(
 				Button::new()
 					.with_style(ButtonStyle::Secondary)

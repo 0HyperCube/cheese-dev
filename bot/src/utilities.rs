@@ -65,8 +65,8 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 		.clone();
 
 	// If the user does not already have an account, create a new one.
-	if !bot_data.users.contains_key(&user.id) {
-		bot_data.users.insert(
+	if !bot_data.users.users.contains_key(&user.id) {
+		bot_data.users.users.insert(
 			user.id.clone(),
 			CheeseUser {
 				account: bot_data.next_account,
@@ -74,7 +74,7 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 				organisations: Vec::new(),
 			},
 		);
-		bot_data.personal_accounts.insert(
+		bot_data.accounts.personal_accounts.insert(
 			bot_data.next_account,
 			Account {
 				name: user.username.clone(),
@@ -141,7 +141,7 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	// Amount cast into real units
 	let amount = (amount * 100.) as u32;
 
-	let from = handler_data.bot_data.account_mut(from);
+	let from = handler_data.bot_data.accounts.account_mut(from);
 
 	// Check the account can back the transaction
 	if from.balance < amount {
@@ -150,7 +150,7 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	from.balance -= amount;
 	let payer_name = from.name.clone();
 
-	let recipiant = handler_data.bot_data.account_mut(recipiant);
+	let recipiant = handler_data.bot_data.accounts.account_mut(recipiant);
 	recipiant.balance += amount;
 
 	let reciever_message = format!(
@@ -168,4 +168,15 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	);
 
 	(sender_message, Some(reciever_message))
+}
+
+pub fn format_bill(bill: &Bill, account_name: String) -> String {
+	format!(
+		"{} - {} to {} - 
+		every {} days",
+		bill.name,
+		format_cheesecoin(bill.amount),
+		account_name,
+		bill.interval
+	)
 }
