@@ -7,7 +7,11 @@ pub async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 	let org_name = handler_data.options["name"].as_str();
 
 	let name = org_name.clone();
-	let account = Account { name, balance: 0 };
+	let account = Account {
+		name,
+		balance: 0,
+		..Default::default()
+	};
 
 	handler_data
 		.bot_data
@@ -146,7 +150,7 @@ pub async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 
 	handler_data
 		.bot_data
-		.account(handler_data.bot_data.cheese_user(&handler_data.user).account)
+		.account_mut(handler_data.bot_data.cheese_user(&handler_data.user).account)
 		.balance += handler_data.bot_data.organisation_accounts[&organisation].balance;
 
 	handler_data

@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use chrono::Datelike;
 use discord::*;
 use serde::{Deserialize, Serialize};
+pub use std::fmt::Write;
 
 pub type AccountId = u64;
 pub const TREASURY: AccountId = 0;
@@ -15,11 +16,27 @@ pub struct CheeseUser {
 	pub organisations: Vec<AccountId>,
 }
 
+/// A bill which has been created by a particular account
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct Bill {
+	pub name: String,
+	pub last_pay: i32,
+	pub interval: i32,
+	pub amount: u32,
+	pub owner: AccountId,
+	pub subscribers: Vec<AccountId>,
+}
+pub type BillId = i16;
+
 /// Data about an accout (organisation or personal)
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Account {
 	pub name: String,
 	pub balance: u32,
+	#[serde(skip_serializing_if = "Vec::is_empty", default)]
+	pub owned_bills: Vec<BillId>,
+	#[serde(skip_serializing_if = "Vec::is_empty", default)]
+	pub subscribed_bills: Vec<BillId>,
 }
 
 /// All the data the bot saves
@@ -28,6 +45,8 @@ pub struct BotData {
 	pub users: HashMap<String, CheeseUser>,
 	pub personal_accounts: HashMap<AccountId, Account>,
 	pub organisation_accounts: HashMap<AccountId, Account>,
+	#[serde(default)]
+	pub bills: HashMap<BillId, Bill>,
 	pub next_account: AccountId,
 	pub wealth_tax: f64,
 	pub last_wealth_tax: chrono::DateTime<chrono::Utc>,
@@ -48,11 +67,13 @@ impl Default for BotData {
 			Account {
 				name: "Treasury".into(),
 				balance: 1000,
+				..Default::default()
 			},
 		)]);
 		Self {
 			users: HashMap::new(),
 			personal_accounts: HashMap::new(),
+			bills: HashMap::new(),
 			organisation_accounts,
 			next_account: 1,
 			wealth_tax: 0.05,
@@ -80,7 +101,7 @@ impl BotData {
 	}
 
 	/// Get the account from an account id (either personal or organisation)
-	pub fn account(&mut self, account: AccountId) -> &mut Account {
+	pub fn account_mut(&mut self, account: AccountId) -> &mut Account {
 		self.personal_accounts
 			.get_mut(&account)
 			.map_or_else(|| self.organisation_accounts.get_mut(&account), |x| Some(x))
@@ -184,4 +205,37 @@ pub struct HandlerData<'a> {
 	pub interaction: Interaction,
 	pub user: User,
 	pub options: HashMap<String, OptionType>,
+}
+/// Get the account from an account id (either personal or organisation)
+pub fn account_immut<'a>(
+	personal_accounts: &'a HashMap<AccountId, Account>,
+	organisation_accounts: &'a HashMap<AccountId, Account>,
+	account: AccountId,
+) -> &'a Account {
+	personal_accounts
+		.get(&account)
+		.map_or_else(|| organisation_accounts.get(&account), |x| Some(x))
+		.unwrap()
+}
+
+/// Get the account from an account id (either personal or organisation)
+pub fn account_mut<'a>(
+	personal_accounts: &'a mut HashMap<AccountId, Account>,
+	organisation_accounts: &'a mut HashMap<AccountId, Account>,
+	account: AccountId,
+) -> &'a mut Account {
+	personal_accounts
+		.get_mut(&account)
+		.map_or_else(|| organisation_accounts.get_mut(&account), |x| Some(x))
+		.unwrap()
+}
+
+/// Finds the account owner from an account id
+pub fn account_owner(users: &HashMap<String, CheeseUser>, account: AccountId) -> String {
+	users
+		.iter()
+		.find(|(_, user)| user.account == account || user.organisations.contains(&account))
+		.unwrap()
+		.0
+		.clone()
 }

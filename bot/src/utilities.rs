@@ -79,6 +79,7 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 			Account {
 				name: user.username.clone(),
 				balance: 0,
+				..Default::default()
 			},
 		);
 		bot_data.next_account += 1;
@@ -140,7 +141,7 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	// Amount cast into real units
 	let amount = (amount * 100.) as u32;
 
-	let from = handler_data.bot_data.account(from);
+	let from = handler_data.bot_data.account_mut(from);
 
 	// Check the account can back the transaction
 	if from.balance < amount {
@@ -149,7 +150,7 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	from.balance -= amount;
 	let payer_name = from.name.clone();
 
-	let recipiant = handler_data.bot_data.account(recipiant);
+	let recipiant = handler_data.bot_data.account_mut(recipiant);
 	recipiant.balance += amount;
 
 	let reciever_message = format!(

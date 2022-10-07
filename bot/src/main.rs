@@ -217,7 +217,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 		// Applies welth tax to a specific account returning the log information for the user
 		fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>) -> (String, u32) {
 			let multiplier = bot_data.wealth_tax / 100.;
-			let account = bot_data.account(account);
+			let account = bot_data.account_mut(account);
 			let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
 			account.balance -= tax;
 
@@ -250,17 +250,19 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 				total_tax += tax;
 			}
 
-			let description = format!(
-				"Wealth tax has been applied at `{:.2}%`.\n\n**Payments**\n```\n{}```",
-				bot_data.wealth_tax, result
-			);
+			if total_tax > 0 {
+				let description = format!(
+					"Wealth tax has been applied at `{:.2}%`.\n\n**Payments**\n```\n{}```",
+					bot_data.wealth_tax, result
+				);
 
-			dm_embed(
-				client,
-				Embed::standard().with_title("Wealth Tax").with_description(description),
-				user_id.clone(),
-			)
-			.await;
+				dm_embed(
+					client,
+					Embed::standard().with_title("Wealth Tax").with_description(description),
+					user_id.clone(),
+				)
+				.await;
+			}
 		}
 
 		bot_data.wealth_taxes.push(total_tax);
@@ -276,6 +278,47 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 				break;
 			}
 		}
+	}
+}
+
+async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
+	async fn apply_bills(bot_data: &mut BotData, client: &mut DiscordClient, account_id: AccountId, name: Option<&str>, result: &mut String) {
+		let account = account_immut(&bot_data.personal_accounts, &bot_data.organisation_accounts, account_id);
+		for bill in &account.subscribed_bills {
+			if let Some(bill) = bot_data.bills.get(bill) {
+				let mut bill_owner_result = format!("{:20} {}", "Account Name", "Charge");
+				let mut bill_owner_total = 0;
+				for _payment in 0..((bot_data.last_day - bill.last_pay).div_floor(bill.last_pay)) {
+					if account.balance >= bill.amount {
+						account.balance -= bill.amount;
+						bill_owner_total += bill.amount;
+						bill_owner_result += &format!("{:20} {}", account.name, format_cheesecoin(bill.amount));
+						let _ = write!(result, "{:20} {:10} {}", account.name, bill.name, format_cheesecoin(bill.amount));
+					} else {
+						let _ = write!(bill_owner_result, "{:20} Could not afford the bill", account.name);
+						let _ = write!(result, "{:20} {:10} could not afford", account.name, bill.name);
+					}
+				}
+
+				let embed = Embed::standard()
+					.with_title(format!("Collected {} from {} bill", format_cheesecoin(bill_owner_total), bill.name))
+					.with_description(format!(
+						"The bill {} has collected {} for your {}.\n\n**Payments**\n```\n{}```",
+						bill.name,
+						format_cheesecoin(bill_owner_total),
+						bot_data
+							.organisation_accounts
+							.get(&bill.owner)
+							.map_or("personal account", |org| &org.name),
+						bill_owner_result,
+					));
+				dm_embed(client, embed, account_owner(&bot_data.users, bill.owner)).await;
+			}
+		}
+	}
+
+	for (user, cheese_user) in &bot_data.users {
+		let mut result = format!("{:20} {:10} {}", "Account Name", "Bill", "Charge");
 	}
 }
 
@@ -376,6 +419,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 					bot_data.last_day = day;
 					treasury_balance(bot_data, client).await;
 					twaddle(bot_data, client).await;
+					check_bills(bot_data, client).await;
 				}
 			}
 			MainMessage::SaveFile => save_file(bot_data, path),

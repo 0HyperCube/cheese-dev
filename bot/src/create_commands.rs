@@ -106,7 +106,84 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 						.with_autocomplete(true),
 				),
 		);
-
+	let bills = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("bill")
+		.with_description("Bill commands")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("create")
+				.with_description("Create a bill.")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the new bill"),
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::Number)
+						.with_name("cheesecoin")
+						.with_description("Number of cheesecoin")
+						.with_required(true),
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("to")
+						.with_description("The account the cheesecoins go to")
+						.with_required(true)
+						.with_autocomplete(true),
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::Number)
+						.with_name("days")
+						.with_description("Days between payments")
+						.with_required(true),
+				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("delete")
+				.with_description("Delete a bill")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the bill")
+						.with_autocomplete(true),
+				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("subscribe")
+				.with_description("Subscribe to a bill")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the bill")
+						.with_autocomplete(true),
+				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_name("unsubscribe")
+				.with_description("Unsubscribe from a bill")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::String)
+						.with_name("name")
+						.with_required(true)
+						.with_description("The name of the bill")
+						.with_autocomplete(true),
+				),
+		)
+		.with_options(ApplicationCommandOption::new().with_name("view").with_description("View active bills"));
 	let rollcall = ApplicationCommand::new()
 		.with_command_type(CommandType::Chat)
 		.with_name("claim")

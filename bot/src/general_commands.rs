@@ -15,7 +15,7 @@ pub async fn about<'a>(handler_data: &mut HandlerData<'a>) {
 
 /// Handles the `/balances` command
 pub async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
-	fn format_account(Account { name, balance }: &Account) -> String {
+	fn format_account(Account { name, balance, .. }: &Account) -> String {
 		format!("{:-20} {}\n", format!("{}:", name), format_cheesecoin(*balance))
 	}
 
