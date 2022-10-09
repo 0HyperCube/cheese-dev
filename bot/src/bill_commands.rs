@@ -28,10 +28,12 @@ pub async fn create_bill(handler_data: &mut HandlerData<'_>) {
 	};
 
 	let days = handler_data.options["days"].as_float();
-	if !days.is_finite() || days < 0. || days >= i32::MAX as f64 {
+	if !days.is_finite() || days < 1. || days >= i32::MAX as f64 {
 		respond_with_embed(
 			handler_data,
-			Embed::standard().with_title("Create Bill").with_description("Days must not be negative."),
+			Embed::standard()
+				.with_title("Create Bill")
+				.with_description("Days must not be less than one."),
 		)
 		.await;
 		return;

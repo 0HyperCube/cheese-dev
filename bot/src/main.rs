@@ -289,14 +289,14 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 }
 
 async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
-	for (_bill_id, bill) in &bot_data.bills {
-		let mut bill_owner_result = format!("{:20} {}", "Account Name", "Charge");
+	for (bill_id, bill) in &bot_data.bills {
+		let mut bill_owner_result = String::new();
 		let mut bill_owner_total = 0;
 		let bill_owner_name = account_immut(&bot_data.accounts.personal_accounts, &bot_data.accounts.organisation_accounts, bill.owner)
 			.name
 			.clone();
 		for &payer in &bill.subscribers {
-			for _payment in 0..((bot_data.last_day - bill.last_pay).div_floor(bill.last_pay)) {
+			for _payment in 0..((bot_data.last_day - bill.last_pay).div_floor(bill.interval)) {
 				let from = account_mut(
 					&mut bot_data.accounts.personal_accounts,
 					&mut bot_data.accounts.organisation_accounts,
@@ -342,20 +342,30 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 			}
 		}
 
-		let embed = Embed::standard()
-			.with_title(format!("Collected {} from {} bill", format_cheesecoin(bill_owner_total), bill.name))
-			.with_description(format!(
-				"The bill {} has collected {} for your {}.\n\n**Payments**\n```\n{}```",
-				bill.name,
-				format_cheesecoin(bill_owner_total),
-				bot_data
-					.accounts
-					.organisation_accounts
-					.get(&bill.owner)
-					.map_or("personal account", |org| &org.name),
-				bill_owner_result,
-			));
-		dm_embed(client, embed, bot_data.users.account_owner(bill.owner)).await;
+		if (bot_data.last_day - bill.last_pay) >= bill.interval {
+			let embed = Embed::standard()
+				.with_title(format!("Collected {} from {} bill", format_cheesecoin(bill_owner_total), bill.name))
+				.with_description(format!(
+					"The bill {} has collected '{}' for {}.\n\n**Payments**\n```\n{}```",
+					bill.name,
+					format_cheesecoin(bill_owner_total),
+					bot_data
+						.accounts
+						.organisation_accounts
+						.get(&bill.owner)
+						.map_or("your personal account", |org| &org.name),
+					if bill_owner_result.is_empty() {
+						format!("None")
+					} else {
+						format!("{:20} {}{}", "Account Name", "Charge", bill_owner_result)
+					},
+				));
+			dm_embed(client, embed, bot_data.users.account_owner(bill.owner)).await;
+		}
+	}
+
+	for bill in bot_data.bills.values_mut() {
+		bill.last_pay += (bot_data.last_day - bill.last_pay).div_floor(bill.interval) * bill.interval;
 	}
 }
 

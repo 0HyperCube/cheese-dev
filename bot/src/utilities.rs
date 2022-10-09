@@ -70,7 +70,7 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 			user.id.clone(),
 			CheeseUser {
 				account: bot_data.next_account,
-				last_pay: chrono::MIN_DATETIME,
+				last_pay: chrono::DateTime::<chrono::Utc>::MIN_UTC,
 				organisations: Vec::new(),
 			},
 		);
@@ -172,11 +172,12 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 
 pub fn format_bill(bill: &Bill, account_name: String) -> String {
 	format!(
-		"{} - {} to {} - 
-		every {} days",
+		"{} - {} to {} -
+		every {} day{}",
 		bill.name,
 		format_cheesecoin(bill.amount),
 		account_name,
-		bill.interval
+		bill.interval,
+		if bill.interval == 1 { "" } else { "s" }
 	)
 }
