@@ -172,12 +172,11 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 
 pub fn format_bill(bill: &Bill, account_name: String) -> String {
 	format!(
-		"{} - {} to {} -
-		every {} day{}",
+		"{} - {} to {} every {}{}",
 		bill.name,
 		format_cheesecoin(bill.amount),
 		account_name,
-		bill.interval,
-		if bill.interval == 1 { "" } else { "s" }
+		if bill.interval == 1 { "".to_string() } else { bill.interval.to_string() },
+		if bill.interval == 1 { "day" } else { " days" }
 	)
 }

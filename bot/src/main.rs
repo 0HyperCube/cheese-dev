@@ -61,6 +61,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"bill delete" => bill_commands::bill_delete(&mut handler_data).await,
 				"bill subscribe" => bill_commands::bill_subscribe(&mut handler_data).await,
 				"bill unsubscribe" => bill_commands::bill_unsubscribe(&mut handler_data).await,
+				"bill view" => bill_commands::bill_view(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
 		}
@@ -80,7 +81,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 					.personal_accounts()
 					.chain(handler_data.bot_data.organisation_accounts())
 					.collect::<Vec<_>>(),
-				("pay", "from") => handler_data
+				("pay", "from") | ("bill subscribe", "from") => handler_data
 					.bot_data
 					.personal_account(&handler_data.user)
 					.chain(handler_data.bot_data.owned_orgs(&handler_data.user))
@@ -289,19 +290,13 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 }
 
 async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
-	for (bill_id, bill) in &bot_data.bills {
+	for (_bill_id, bill) in &bot_data.bills {
 		let mut bill_owner_result = String::new();
 		let mut bill_owner_total = 0;
-		let bill_owner_name = account_immut(&bot_data.accounts.personal_accounts, &bot_data.accounts.organisation_accounts, bill.owner)
-			.name
-			.clone();
+		let bill_owner_name = bot_data.accounts.account(bill.owner).name.clone();
 		for &payer in &bill.subscribers {
 			for _payment in 0..((bot_data.last_day - bill.last_pay).div_floor(bill.interval)) {
-				let from = account_mut(
-					&mut bot_data.accounts.personal_accounts,
-					&mut bot_data.accounts.organisation_accounts,
-					payer,
-				);
+				let from = bot_data.accounts.account_mut(payer);
 
 				if from.balance >= bill.amount {
 					from.balance -= bill.amount;

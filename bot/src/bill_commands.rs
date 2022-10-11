@@ -159,20 +159,19 @@ pub async fn bill_unsubscribe(handler_data: &mut HandlerData<'_>) {
 			return;
 		}
 	};
-	let it = {
+	let user_owned_accounts = {
 		let user = bot_data.cheese_user(&handler_data.user);
 		user.organisations.iter().copied().chain([user.account]).collect::<Vec<_>>()
 	};
 
-	for account in it {
-		let account = bot_data.accounts.account_mut(account);
+	for account in &user_owned_accounts {
+		let account = bot_data.accounts.account_mut(*account);
 		account.subscribed_bills.retain(|&x| x != bill_id)
 	}
 
 	let bill = bot_data.bills.get_mut(&bill_id).unwrap();
-	let owner = account_immut(&bot_data.accounts.personal_accounts, &bot_data.accounts.organisation_accounts, bill.owner)
-		.name
-		.clone();
+	bill.subscribers.retain(|account| !user_owned_accounts.contains(account));
+	let owner = bot_data.accounts.account(bill.owner).name.clone();
 	let bill_owner = format_bill(bill, owner);
 	let description = format!("Unsubscribed to {} ", bill_owner);
 
@@ -181,4 +180,63 @@ pub async fn bill_unsubscribe(handler_data: &mut HandlerData<'_>) {
 		Embed::standard().with_title("Subscribed to bill").with_description(description),
 	)
 	.await;
+}
+
+pub async fn bill_view(handler_data: &mut HandlerData<'_>) {
+	let bot_data = &mut handler_data.bot_data;
+
+	let mut result = format!("**Bills you are subscribed to**");
+	let user_owned_accounts = {
+		let user = bot_data.cheese_user(&handler_data.user);
+		user.organisations.iter().copied().chain([user.account]).collect::<Vec<_>>()
+	};
+
+	let mut subscribed_bills = false;
+	for account in &user_owned_accounts {
+		let account = bot_data.accounts.account(*account);
+		for bill_id in &account.subscribed_bills {
+			if let Some(bill) = bot_data.bills.get(&bill_id) {
+				if !subscribed_bills {
+					let _ = write!(result, "```\n{:-20} {}", "Subscribed account", "Bill");
+				}
+				let owner = bot_data.accounts.account(bill.owner).name.clone();
+				let _ = write!(result, "\n{:-20} {}", account.name, format_bill(bill, owner));
+				subscribed_bills = true;
+			}
+		}
+	}
+	if !subscribed_bills {
+		result += "\nNone";
+	} else {
+		result += "\n```";
+	}
+
+	let _ = write!(result, "\n\n**Owned Bills**");
+	let mut owned_bills = false;
+	for account in &user_owned_accounts {
+		let account = bot_data.accounts.account(*account);
+		for bill_id in &account.owned_bills {
+			if let Some(bill) = bot_data.bills.get(&bill_id) {
+				result += "\n```";
+				let _ = write!(result, "\n{}", format_bill(bill, account.name.clone()));
+				result += "\nSubscribers:";
+				if bill.subscribers.is_empty() {
+					result += "\n    None";
+				} else {
+					for subscriber in &bill.subscribers {
+						result += "\n    ";
+						result += &bot_data.accounts.account(*subscriber).name;
+					}
+				}
+
+				owned_bills = true;
+				result += "\n```";
+			}
+		}
+	}
+	if !owned_bills {
+		result += "\nNone";
+	}
+
+	respond_with_embed(handler_data, Embed::standard().with_title("Your bills").with_description(result)).await;
 }

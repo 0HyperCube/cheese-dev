@@ -307,26 +307,3 @@ pub struct HandlerData<'a> {
 	pub user: User,
 	pub options: HashMap<String, OptionType>,
 }
-/// Get the account from an account id (either personal or organisation)
-pub fn account_immut<'a>(
-	personal_accounts: &'a HashMap<AccountId, Account>,
-	organisation_accounts: &'a HashMap<AccountId, Account>,
-	account: AccountId,
-) -> &'a Account {
-	personal_accounts
-		.get(&account)
-		.map_or_else(|| organisation_accounts.get(&account), |x| Some(x))
-		.unwrap()
-}
-
-/// Get the account from an account id (either personal or organisation)
-pub fn account_mut<'a>(
-	personal_accounts: &'a mut HashMap<AccountId, Account>,
-	organisation_accounts: &'a mut HashMap<AccountId, Account>,
-	account: AccountId,
-) -> &'a mut Account {
-	personal_accounts
-		.get_mut(&account)
-		.map_or_else(|| organisation_accounts.get_mut(&account), |x| Some(x))
-		.unwrap()
-}
