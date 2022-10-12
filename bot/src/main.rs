@@ -81,12 +81,12 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 					.personal_accounts()
 					.chain(handler_data.bot_data.organisation_accounts())
 					.collect::<Vec<_>>(),
-				("pay", "from") | ("bill subscribe", "from") => handler_data
+				("pay", "from") | ("bill subscribe", "from") | ("bill create", "to") => handler_data
 					.bot_data
 					.personal_account(&handler_data.user)
 					.chain(handler_data.bot_data.owned_orgs(&handler_data.user))
 					.collect(),
-				("organisation transfer", "name") | ("organisation rename", "name") | ("organisation delete", "name") | ("bill create", "to") => {
+				("organisation transfer", "name") | ("organisation rename", "name") | ("organisation delete", "name") => {
 					handler_data.bot_data.owned_orgs(&handler_data.user).collect()
 				}
 				("organisation transfer", "owner") => handler_data.bot_data.non_self_people(&handler_data.user).collect(),
