@@ -392,6 +392,9 @@ async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
 						.with_title(format!("Hangman in Rust due in {days} days!"))
 						.with_description(format!("Dear Twaddle,\n\nI write to you today to inform you of an approaching deadline that it would be wise not to miss. The program which you yourself have willingly resolved to craft, Hangman in Rust, is due in **{days} days**. Whilst this deadline has the possibility of being percieved as tyranical, relentless and inhumane, I can, in all confidence, assure you that it will be exceptionally benificial to you and all of those around you.\n\nYou have long wanted to learn a low level systems programming language, and have spoken of pursuing a path involving scholarship in Rust for an imoderate period of time. Completing something like this will increase your motivation and perseverance as well as your attention span, which is vital to getting hired at the cheesecake factory which I percieve is your life aim.\n\nBest wishes,\nCheese Bot."));
 	dm_embed(client, embed, "762325231925854231".to_string()).await;
+
+	let message = ChannelMessage::new().with_content("https://i1.wp.com/www.pcfruit.com/wp-content/uploads/2017/04/20370.jpg?fit=4256%2C2832&ssl=1");
+	dm_message(client, message, "762325231925854231".to_string()).await;
 }
 
 /// Runs the bot

@@ -21,13 +21,18 @@ pub async fn respond_with_embed<'a>(handler_data: &mut HandlerData<'a>, embed: E
 	respond_with_message(handler_data, ChannelMessage::new().with_embeds(embed)).await;
 }
 
-/// Utility function for dming a discord user an embed
-pub async fn dm_embed<'a>(client: &mut DiscordClient, embed: Embed, recipient_id: String) {
+/// Utility function for dming a discord user a message
+pub async fn dm_message<'a>(client: &mut DiscordClient, message: ChannelMessage, recipient_id: String) {
 	// We first create the channel (does nothing if it already exists)
 	let channel = CreateDM { recipient_id }.post_create(client).await.unwrap();
 
 	// Then we can send the message in the channel
-	ChannelMessage::new().with_embeds(embed).post_create(client, channel.id).await.unwrap();
+	message.post_create(client, channel.id).await.unwrap();
+}
+
+/// Utility function for dming a discord user an embed
+pub async fn dm_embed<'a>(client: &mut DiscordClient, embed: Embed, recipient_id: String) {
+	dm_message(client, ChannelMessage::new().with_embeds(embed), recipient_id).await
 }
 
 /// Utility function to extract an account from a slash command option
