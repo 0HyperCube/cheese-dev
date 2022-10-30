@@ -1,13 +1,10 @@
 (
 	users: (
 		users: {
-			"653127445922316299": (
-				account: 653127445922316299,
-				last_pay: "2022-05-09T17:41:28.658548448Z",
-				organisations: [
-					22,
-					25,
-				],
+			"758042322364792974": (
+				account: 24,
+				last_pay: "-262144-01-01T00:00:00Z",
+				organisations: [],
 			),
 			"888167676512440352": (
 				account: 888167676512440352,
@@ -20,6 +17,27 @@
 				organisations: [
 					3,
 					19,
+				],
+			),
+			"653127445922316299": (
+				account: 653127445922316299,
+				last_pay: "2022-05-09T17:41:28.658548448Z",
+				organisations: [
+					22,
+					25,
+				],
+			),
+			"630073509137350690": (
+				account: 630073509137350690,
+				last_pay: "2022-09-19T06:26:20.495972201Z",
+				organisations: [
+					12,
+					4,
+					47,
+					48,
+					51,
+					52,
+					53,
 				],
 			),
 			"887020108696920116": (
@@ -41,11 +59,6 @@
 					38,
 				],
 			),
-			"758042322364792974": (
-				account: 24,
-				last_pay: "-262144-01-01T00:00:00Z",
-				organisations: [],
-			),
 			"709767987242074116": (
 				account: 709767987242074116,
 				last_pay: "2022-10-24T14:49:36.983136243Z",
@@ -59,19 +72,6 @@
 					10,
 				],
 			),
-			"630073509137350690": (
-				account: 630073509137350690,
-				last_pay: "2022-09-19T06:26:20.495972201Z",
-				organisations: [
-					12,
-					4,
-					47,
-					48,
-					51,
-					52,
-					53,
-				],
-			),
 			"737928480389333004": (
 				account: 737928480389333004,
 				last_pay: "2022-07-12T18:39:52.931927878Z",
@@ -81,103 +81,83 @@
 	),
 	accounts: (
 		personal_accounts: {
-			895756129026576474: (
-				name: "Elliott M.",
-				balance: 88,
-			),
-			722468356711776269: (
-				name: "Elliot F.",
-				balance: 2489,
-			),
-			887020108696920116: (
-				name: "Alan",
-				balance: 1448,
-			),
-			888167676512440352: (
-				name: "Chino",
-				balance: 1896,
-			),
-			630073509137350690: (
-				name: "James",
-				balance: 19754,
+			737928480389333004: (
+				name: "Louis",
+				balance: 172,
 			),
 			24: (
 				name: "The_Toppat_Man",
-				balance: 2013,
+				balance: 1872,
+			),
+			630073509137350690: (
+				name: "James",
+				balance: 18371,
+			),
+			887020108696920116: (
+				name: "Alan",
+				balance: 1346,
 			),
 			709767987242074116: (
 				name: "Adam",
-				balance: 1503,
+				balance: 1397,
+			),
+			895756129026576474: (
+				name: "Elliott M.",
+				balance: 81,
+			),
+			888167676512440352: (
+				name: "Chino",
+				balance: 1763,
+			),
+			722468356711776269: (
+				name: "Elliot F.",
+				balance: 2314,
 			),
 			653127445922316299: (
 				name: "d man the almighty, heir of the soon to be new new cheeseland royal properties",
-				balance: 2042,
-			),
-			737928480389333004: (
-				name: "Louis",
-				balance: 185,
+				balance: 1899,
 			),
 		},
 		organisation_accounts: {
+			23: (
+				name: "The Wekkly Chese",
+				balance: 987,
+			),
 			11: (
 				name: "Short story long",
-				balance: 504,
-			),
-			38: (
-				name: "\u{8}\u{8}\u{8}\u{7f}\u{7f}\u{7f}\u{7f}",
-				balance: 121,
-			),
-			20: (
-				name: "Juscheese",
-				balance: 415,
+				balance: 468,
 			),
 			25: (
 				name: "a",
 				balance: 0,
 			),
-			22: (
-				name: "the d man empire",
-				balance: 0,
+			48: (
+				name: "CMA",
+				balance: 709,
 			),
-			55: (
-				name: "Geography Homework Woes",
-				balance: 435,
-			),
-			12: (
-				name: "Go Consulting Ltd.",
-				balance: 16221,
-			),
-			52: (
-				name: "Petitions",
-				balance: 650,
-			),
-			10: (
-				name: "MfEA",
-				balance: 0,
-			),
-			51: (
-				name: "Constitution",
-				balance: 650,
-			),
-			4: (
-				name: "Gladvertising",
-				balance: 24,
+			38: (
+				name: "\u{8}\u{8}\u{8}\u{7f}\u{7f}\u{7f}\u{7f}",
+				balance: 112,
 			),
 			18: (
 				name: "Short Story Long Plus",
-				balance: 444,
+				balance: 412,
 			),
 			19: (
 				name: "jeffrey/",
 				balance: 0,
 			),
-			5: (
-				name: "Children in Africa",
-				balance: 238,
-			),
 			7: (
 				name: "Auction House",
-				balance: 554,
+				balance: 515,
+			),
+			54: (
+				name: "Green Socialist Ferrat Party (GSFP)",
+				balance: 400,
+			),
+			51: (
+				name: "Constitution",
+				balance: 604,
 			),
 			61: (
 				name: "Delhi Sands Flower Loving Fly Conservation Society and Church",
@@ -188,43 +168,63 @@
 			),
 			0: (
 				name: "Treasury",
-				balance: 93448,
+				balance: 97395,
 			),
 			53: (
 				name: "Contracts",
-				balance: 650,
+				balance: 604,
+			),
+			10: (
+				name: "MfEA",
+				balance: 0,
+			),
+			55: (
+				name: "Geography Homework Woes",
+				balance: 404,
+			),
+			5: (
+				name: "Children in Africa",
+				balance: 221,
 			),
 			3: (
 				name: "Casino",
-				balance: 36,
+				balance: 33,
 			),
 			1: (
 				name: "Less Debt Fund",
-				balance: 415,
+				balance: 385,
 			),
-			48: (
-				name: "CMA",
-				balance: 763,
+			52: (
+				name: "Petitions",
+				balance: 604,
+			),
+			20: (
+				name: "Juscheese",
+				balance: 385,
 			),
 			47: (
 				name: "parliament",
-				balance: 630,
+				balance: 585,
 			),
-			23: (
-				name: "The Wekkly Chese",
-				balance: 1062,
+			22: (
+				name: "the d man empire",
+				balance: 0,
 			),
 			56: (
 				name: "OH LAWD HE COMIN",
-				balance: 76,
-			),
-			54: (
-				name: "Green Socialist Ferrat Party (GSFP)",
-				balance: 431,
+				balance: 70,
 			),
 			21: (
 				name: "Esperanto-translator",
-				balance: 415,
+				balance: 385,
+			),
+			4: (
+				name: "Gladvertising",
+				balance: 22,
+			),
+			12: (
+				name: "Go Consulting Ltd.",
+				balance: 15085,
 			),
 		},
 	),
@@ -240,8 +240,8 @@
 	},
 	next_account: 64,
 	wealth_tax: 7.0,
-	last_wealth_tax: "2022-10-23T05:00:00Z",
-	last_day: 738457,
+	last_wealth_tax: "2022-10-30T05:00:00Z",
+	last_day: 738458,
 	treasury_balances: [
 		82398,
 		80898,
@@ -286,6 +286,7 @@
 		93448,
 		93448,
 		93448,
+		97395,
 	],
 	wealth_taxes: [
 		4869,
@@ -294,11 +295,12 @@
 		5674,
 		4527,
 		4214,
+		3947,
 	],
 	election: {
-		"630073509137350690": [],
 		"722468356711776269": [],
+		"630073509137350690": [],
 	},
-	previous_time: "2022-10-23T08:54:58.281209491Z",
-	previous_results: "James, 0\nElliot F., 0\n",
+	previous_time: "2022-10-30T09:27:32.766342432Z",
+	previous_results: "Elliot F., 0\nJames, 0\n",
 )
