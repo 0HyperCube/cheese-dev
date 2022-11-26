@@ -224,8 +224,13 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 		// Applies welth tax to a specific account returning the log information for the user
 		fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>) -> (String, u32) {
-			let multiplier = bot_data.wealth_tax / 100.;
+			let mut multiplier = bot_data.wealth_tax / 100.;
+			// Add 70% wealth tax band to accounts with >200cc
 			let account = bot_data.accounts.account_mut(account);
+			if account.balance >= 200 * 100 {
+				multiplier = 0.7;
+			}
+
 			let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
 			account.balance -= tax;
 
