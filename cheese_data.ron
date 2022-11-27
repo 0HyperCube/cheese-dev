@@ -1,9 +1,40 @@
 (
 	users: (
 		users: {
+			"722468356711776269": (
+				account: 722468356711776269,
+				last_pay: "2022-05-07T19:07:14.821354378Z",
+				organisations: [
+					3,
+					19,
+				],
+			),
 			"709767987242074116": (
 				account: 709767987242074116,
 				last_pay: "2022-11-20T09:34:02.870109696Z",
+				organisations: [],
+			),
+			"630073509137350690": (
+				account: 630073509137350690,
+				last_pay: "2022-09-19T06:26:20.495972201Z",
+				organisations: [
+					12,
+					4,
+					47,
+					48,
+					51,
+					52,
+					53,
+				],
+			),
+			"762325231925854231": (
+				account: 64,
+				last_pay: "-262144-01-01T00:00:00Z",
+				organisations: [],
+			),
+			"888167676512440352": (
+				account: 888167676512440352,
+				last_pay: "2022-03-03T17:46:43.140132233Z",
 				organisations: [],
 			),
 			"887020108696920116": (
@@ -25,33 +56,10 @@
 					65,
 				],
 			),
-			"888167676512440352": (
-				account: 888167676512440352,
-				last_pay: "2022-03-03T17:46:43.140132233Z",
-				organisations: [],
-			),
-			"762325231925854231": (
-				account: 64,
-				last_pay: "-262144-01-01T00:00:00Z",
-				organisations: [],
-			),
 			"737928480389333004": (
 				account: 737928480389333004,
 				last_pay: "2022-11-19T17:01:16.449031461Z",
 				organisations: [],
-			),
-			"758042322364792974": (
-				account: 24,
-				last_pay: "-262144-01-01T00:00:00Z",
-				organisations: [],
-			),
-			"722468356711776269": (
-				account: 722468356711776269,
-				last_pay: "2022-05-07T19:07:14.821354378Z",
-				organisations: [
-					3,
-					19,
-				],
 			),
 			"895756129026576474": (
 				account: 895756129026576474,
@@ -70,54 +78,30 @@
 					0,
 				],
 			),
-			"630073509137350690": (
-				account: 630073509137350690,
-				last_pay: "2022-09-19T06:26:20.495972201Z",
-				organisations: [
-					12,
-					4,
-					47,
-					48,
-					51,
-					52,
-					53,
-				],
+			"758042322364792974": (
+				account: 24,
+				last_pay: "-262144-01-01T00:00:00Z",
+				organisations: [],
 			),
 		},
 	),
 	accounts: (
 		personal_accounts: {
-			895756129026576474: (
-				name: "Elliott M.",
-				balance: 64,
+			24: (
+				name: "The_Toppat_Man",
+				balance: 1398,
 			),
 			737928480389333004: (
 				name: "Louis",
-				balance: 77544,
+				balance: 23263,
 			),
-			653127445922316299: (
-				name: "d man the almighty, heir of the soon to be new new cheeseland royal properties",
-				balance: 1527,
-			),
-			24: (
-				name: "The_Toppat_Man",
-				balance: 1504,
-			),
-			888167676512440352: (
-				name: "Chino",
-				balance: 210,
-			),
-			630073509137350690: (
-				name: "James",
-				balance: 14776,
+			895756129026576474: (
+				name: "Elliott M.",
+				balance: 59,
 			),
 			722468356711776269: (
 				name: "Elliot F.",
-				balance: 1860,
-			),
-			709767987242074116: (
-				name: "Adam",
-				balance: 2004,
+				balance: 1729,
 			),
 			64: (
 				name: "аe",
@@ -125,119 +109,135 @@
 			),
 			887020108696920116: (
 				name: "Alan",
-				balance: 1081,
+				balance: 1005,
+			),
+			653127445922316299: (
+				name: "d man the almighty, heir of the soon to be new new cheeseland royal properties",
+				balance: 1420,
+			),
+			888167676512440352: (
+				name: "Chino",
+				balance: 195,
+			),
+			630073509137350690: (
+				name: "James",
+				balance: 13741,
+			),
+			709767987242074116: (
+				name: "Adam",
+				balance: 1863,
 			),
 		},
 		organisation_accounts: {
 			53: (
 				name: "Contracts",
-				balance: 484,
-			),
-			38: (
-				name: "\u{8}\u{8}\u{8}\u{7f}\u{7f}\u{7f}\u{7f}",
-				balance: 89,
-			),
-			21: (
-				name: "Esperanto-translator",
-				balance: 308,
-			),
-			47: (
-				name: "parliament",
-				balance: 469,
-			),
-			0: (
-				name: "Treasury",
-				balance: 10316,
-			),
-			11: (
-				name: "Short story long",
-				balance: 375,
-			),
-			7: (
-				name: "Auction House",
-				balance: 412,
-			),
-			54: (
-				name: "LGCFP",
-				balance: 320,
-			),
-			52: (
-				name: "Petitions",
-				balance: 484,
-			),
-			3: (
-				name: "Casino",
-				balance: 25,
-			),
-			23: (
-				name: "The Wekkly Chese",
-				balance: 792,
-			),
-			55: (
-				name: "Geography Homework Woes",
-				balance: 323,
-			),
-			4: (
-				name: "Gladvertising",
-				balance: 16,
-			),
-			19: (
-				name: "jeffrey/",
-				balance: 0,
-			),
-			12: (
-				name: "Go Consulting Ltd.",
-				balance: 13434,
-			),
-			5: (
-				name: "Children in Africa",
-				balance: 176,
-			),
-			1: (
-				name: "Less Debt Fund",
-				balance: 308,
-			),
-			25: (
-				name: "a",
-				balance: 0,
+				balance: 450,
 			),
 			51: (
 				name: "Constitution",
-				balance: 484,
+				balance: 450,
+			),
+			38: (
+				name: "\u{8}\u{8}\u{8}\u{7f}\u{7f}\u{7f}\u{7f}",
+				balance: 82,
+			),
+			55: (
+				name: "Geography Homework Woes",
+				balance: 300,
+			),
+			52: (
+				name: "Petitions",
+				balance: 450,
+			),
+			1: (
+				name: "Less Debt Fund",
+				balance: 286,
+			),
+			7: (
+				name: "Auction House",
+				balance: 383,
 			),
 			20: (
 				name: "Juscheese",
-				balance: 308,
-			),
-			65: (
-				name: "MoRA",
-				balance: 0,
+				balance: 286,
 			),
 			61: (
 				name: "Delhi Sands Flower Loving Fly Conservation Society and Church",
-				balance: 19352,
+				balance: 17997,
 				owned_bills: [
 					62,
 				],
+			),
+			0: (
+				name: "Treasury",
+				balance: 68960,
+			),
+			54: (
+				name: "LGCFP",
+				balance: 297,
+			),
+			11: (
+				name: "Short story long",
+				balance: 348,
 			),
 			22: (
 				name: "the d man empire",
 				balance: 0,
 			),
-			48: (
-				name: "CMA",
-				balance: 569,
+			23: (
+				name: "The Wekkly Chese",
+				balance: 736,
+			),
+			3: (
+				name: "Casino",
+				balance: 23,
+			),
+			65: (
+				name: "MoRA",
+				balance: 0,
 			),
 			18: (
 				name: "Short Story Long Plus",
-				balance: 331,
+				balance: 307,
+			),
+			48: (
+				name: "CMA",
+				balance: 529,
+			),
+			12: (
+				name: "Go Consulting Ltd.",
+				balance: 12493,
+			),
+			4: (
+				name: "Gladvertising",
+				balance: 14,
+			),
+			5: (
+				name: "Children in Africa",
+				balance: 163,
 			),
 			56: (
 				name: "OH LAWD HE COMIN",
-				balance: 55,
+				balance: 51,
 			),
 			10: (
 				name: "MfEA",
+				balance: 0,
+			),
+			47: (
+				name: "parliament",
+				balance: 436,
+			),
+			25: (
+				name: "a",
+				balance: 0,
+			),
+			21: (
+				name: "Esperanto-translator",
+				balance: 286,
+			),
+			19: (
+				name: "jeffrey/",
 				balance: 0,
 			),
 		},
@@ -254,8 +254,8 @@
 	},
 	next_account: 66,
 	wealth_tax: 7.0,
-	last_wealth_tax: "2022-11-20T05:00:00Z",
-	last_day: 738485,
+	last_wealth_tax: "2022-11-27T05:00:00Z",
+	last_day: 738486,
 	treasury_balances: [
 		82398,
 		80898,
@@ -327,6 +327,7 @@
 		10316,
 		10316,
 		10316,
+		68960,
 	],
 	wealth_taxes: [
 		4869,
@@ -339,17 +340,13 @@
 		3590,
 		3358,
 		10516,
+		58644,
 	],
 	election: {
-		"887020108696920116": [
-			"887020108696920116",
-			"737928480389333004",
-		],
-		"722468356711776269": [
-			"630073509137350690",
-		],
+		"722468356711776269": [],
+		"887020108696920116": [],
 		"762325231925854231": [],
 	},
-	previous_time: "2022-11-20T09:21:28.218399700Z",
-	previous_results: "Alan, 0\nаe, 0\nElliot F., 0\n",
+	previous_time: "2022-11-27T10:46:59.679420622Z",
+	previous_results: "Alan, 2\nElliot F., 1\nаe, 0\n",
 )
