@@ -7,3 +7,4 @@ git commit -a -m "Update cheesedata"
 git push
 
 cargo run --release
+#sh -c "~/dev/cheese-dev/run.sh"
