@@ -168,6 +168,9 @@
 			12: (
 				name: "Go Consulting Ltd.",
 				balance: 15994,
+				owned_bills: [
+					67,
+				],
 			),
 			19: (
 				name: "jeffrey/",
@@ -243,6 +246,14 @@
 		},
 	),
 	bills: {
+		67: (
+			name: "Cheese Bot",
+			last_pay: 738504,
+			interval: 7,
+			amount: 1500,
+			owner: 12,
+			subscribers: [],
+		),
 		62: (
 			name: "Save the Delhi Sands Flower Loving Fly",
 			last_pay: 738502,
@@ -252,7 +263,7 @@
 			subscribers: [],
 		),
 	},
-	next_account: 67,
+	next_account: 68,
 	wealth_tax: 7.0,
 	last_wealth_tax: "2022-12-11T05:00:00Z",
 	last_day: 738504,
