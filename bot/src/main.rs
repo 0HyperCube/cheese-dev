@@ -223,8 +223,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 		info!("Applying wealth tax.");
 
 		// Applies welth tax to a specific account returning the log information for the user
-		fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>) -> (String, u32) {
-			let multiplier = bot_data.wealth_tax / 100.;
+		fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> (String, u32) {
 			let account = bot_data.accounts.account_mut(account);
 
 			let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
@@ -244,9 +243,31 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 		let mut total_tax = 0;
 
 		for user_id in users {
+			let origional_wealth = {
+				bot_data.accounts.account(bot_data.users.users[&user_id].account).balance
+					+ bot_data.users.users[&user_id]
+						.organisations
+						.clone()
+						.iter()
+						.map(|x| bot_data.accounts.account(*x).balance)
+						.sum::<u32>()
+			};
+			let mut total_wealth = origional_wealth;
+			let mut tax_rate = 0.;
+			let paid = bot_data
+				.wealth_tax
+				.iter()
+				.map(|&(amount, percent)| {
+					let taxed = amount.min(total_wealth);
+					total_wealth -= taxed;
+					tax_rate += (taxed as f64 * percent) / total_wealth as f64;
+					(taxed, percent)
+				})
+				.collect::<Vec<_>>();
+
 			let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
 
-			let (next, tax) = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"));
+			let (next, tax) = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"), tax_rate);
 			result += next;
 			total_tax += tax;
 
@@ -254,15 +275,20 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 				if org == 0 {
 					continue;
 				}
-				let (next, tax) = &apply_wealth_tax_account(bot_data, org, None);
+				let (next, tax) = &apply_wealth_tax_account(bot_data, org, None, tax_rate);
 				result += next;
 				total_tax += tax;
 			}
 
 			if total_tax > 0 {
 				let description = format!(
-					"Wealth tax has been applied at `{:.2}%`.\n\n**Payments**\n```\n{}```",
-					bot_data.wealth_tax, result
+					"Wealth tax has been applied at `{}.\n\n**Payments**\n```\n{}```",
+					paid.into_iter()
+						.filter(|(cc, _)| *cc != 0)
+						.map(|(a, b)| format!("{}: {:.2}%", format_cheesecoin(a), b))
+						.collect::<Vec<_>>()
+						.join(","),
+					result
 				);
 
 				dm_embed(
@@ -367,16 +393,21 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 async fn treasury_balance(bot_data: &mut BotData, client: &mut DiscordClient) {
 	let balance = bot_data.treasury_account().balance;
-	let description = format!(
-		"**Financial information for {}**\n```\n{:-20} {}\n{:-20} {:.2}%\n{:-20} {}\n```",
+	let mut description = format!(
+		"**Financial information for {}**\n```\n{:-20} {}\n",
 		chrono::Utc::now().format("%d/%m/%Y"),
 		"Total Currency:",
 		format_cheesecoin(bot_data.total_currency()),
-		"Wealth Tax:",
-		bot_data.wealth_tax,
-		"Treasury Balance:",
-		format_cheesecoin(balance)
 	);
+	for &(amount, tax_rate) in &bot_data.wealth_tax {
+		let limit = if amount == u32::MAX {
+			" (no limit)".to_string()
+		} else {
+			format!(" <{}", format_cheesecoin(amount))
+		};
+		let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Wealth Tax{}:", limit), tax_rate);
+	}
+	let _ = write!(&mut description, "{:-20} {}\n```", "Treasury Balance:", format_cheesecoin(balance));
 	bot_data.treasury_balances.push(balance);
 	bot_data.changed = true;
 	let embed = Embed::standard().with_title("Daily Treasury Report").with_description(description);

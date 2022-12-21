@@ -20,12 +20,21 @@ pub async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
 	}
 
 	let mut description = format!(
-		"**Currency information**\n```\n{:-20} {}\n{:-20} {:.2}%\n```\n**Your accounts**\n```",
+		"**Currency information**\n```\n{:-20} {}\n",
 		"Total Currency:",
 		format_cheesecoin(handler_data.bot_data.total_currency()),
-		"Wealth Tax:",
-		handler_data.bot_data.wealth_tax
 	);
+
+	for &(amount, tax_rate) in &handler_data.bot_data.wealth_tax {
+		let limit = if amount == u32::MAX {
+			" (no limit)".to_string()
+		} else {
+			format!(" <{}", format_cheesecoin(amount))
+		};
+		let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Wealth Tax{}:", limit), tax_rate);
+	}
+	let _ = write!(&mut description, "{:-20} {:.2}%\n", "VAT", handler_data.bot_data.vat);
+	let _ = write!(&mut description, "```\n**Your accounts**\n```");
 
 	let cheese_user = handler_data.bot_data.cheese_user(&handler_data.user);
 
