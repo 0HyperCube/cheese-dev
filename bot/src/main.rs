@@ -282,7 +282,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 			if total_tax > 0 {
 				let description = format!(
-					"Wealth tax has been applied at `{}.\n\n**Payments**\n```\n{}```",
+					"Wealth tax has been applied at `{}`.\n\n**Payments**\n```\n{}```",
 					paid.into_iter()
 						.filter(|(cc, _)| *cc != 0)
 						.map(|(a, b)| format!("{}: {:.2}%", format_cheesecoin(a), b))
