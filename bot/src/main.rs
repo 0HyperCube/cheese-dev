@@ -252,18 +252,24 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 						.map(|x| bot_data.accounts.account(*x).balance)
 						.sum::<u32>()
 			};
-			let mut total_wealth = origional_wealth;
-			let mut tax_rate = 0.;
-			let paid = bot_data
-				.wealth_tax
-				.iter()
-				.map(|&(amount, percent)| {
-					let taxed = amount.min(total_wealth);
-					total_wealth -= taxed;
-					tax_rate += (taxed as f64 * percent) / total_wealth as f64;
-					(taxed, percent)
-				})
-				.collect::<Vec<_>>();
+
+			let tax_rate = {
+				let mut total_wealth = origional_wealth;
+				let mut total_tax_collected = 0.;
+				let paid = bot_data
+					.wealth_tax
+					.iter()
+					.map(|&(amount, percent)| {
+						// Amount of tax taken by that band
+						let taxed = amount.min(total_wealth);
+						total_wealth -= taxed;
+						let tax_collected = taxed as f64 * percent / 100.;
+						total_tax_collected += tax_collected;
+						(taxed, percent)
+					})
+					.collect::<Vec<_>>();
+				total_tax_collected / origional_wealth as f64
+			};
 
 			let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
 
