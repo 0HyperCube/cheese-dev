@@ -5,7 +5,7 @@ pub struct User {
 	id: String,
 	username: String,
 	discriminator: String,
-	avatar: String,
+	avatar: Option<String>,
 }
 
 #[request(get_guild_member = GET "/guilds/{guild_id}/members/{user_id}" as guild_id, user_id)]
