@@ -42,9 +42,9 @@ impl DiscordClient {
 
 			let now = tokio::time::Instant::now();
 			let mut req = Request::builder()
-				.method(method)
+				.method(&method)
 				.uri(uri)
-				.body(Body::from(body))
+				.body(Body::from(body.clone()))
 				.expect("request builder");
 
 			req.headers_mut()
@@ -66,7 +66,10 @@ impl DiscordClient {
 
 			// Log an error if the request was not sucessful (including the body as discord sends error information)
 			if !status.is_success() {
-				error!("Unsucsessful request. Recieved response {} with body {}", status, utf);
+				error!(
+					"Unsucsessful request. Recieved response {} with body {}\n\nSending {} to {} with body:\n{}",
+					status, utf, method, uri, body
+				);
 			}
 
 			self.cached_get.insert(uri.to_string(), utf);
