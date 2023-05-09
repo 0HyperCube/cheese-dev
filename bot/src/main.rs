@@ -341,7 +341,7 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 					bill_owner_result += &format!("{:20} {}", from.name, format_cheesecoin(bill.amount));
 
 					let sender_message = format!(
-						"Successfully transfered {} from {} to {} in order to fund the bill {}.",
+						"successfully transfered {} from {} to {} in order to fund the bill {}.",
 						format_cheesecoin(bill.amount),
 						from.name,
 						bill_owner_name,
@@ -493,6 +493,17 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 					send_outgoing_message.send(serde_json::to_string(&identify).unwrap()).await.unwrap();
 					tokio::spawn(dispatch_msg(send_ev.clone(), d.heartbeat_interval, MainMessage::Heartbeat));
+
+					if let Some(ping_squad) = bot_data.bills.get(&82) {
+						for &subscriber in &ping_squad.subscribers {
+							let recipient_id = bot_data.users.account_owner(subscriber);
+							let embed = Embed::standard().with_title("Cheesebot Online").with_description(format!(
+								"Cheesebot is now online. You received this message because you are subscribed to the {} bill.",
+								&ping_squad.name
+							));
+							dm_embed(client, embed, recipient_id).await;
+						}
+					}
 				}
 				GatewayRecieve::HeartbeatACK => {}
 			},

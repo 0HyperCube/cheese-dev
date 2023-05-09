@@ -29,7 +29,7 @@ pub async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 	handler_data.bot_data.next_account += 1;
 
 	let description = format!(
-		"Successfully created {} which is owned by {}",
+		"successfully created {} which is owned by {}",
 		org_name,
 		handler_data.bot_data.personal_account_name(&handler_data.user)
 	);

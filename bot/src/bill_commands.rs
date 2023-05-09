@@ -57,7 +57,7 @@ pub async fn create_bill(handler_data: &mut HandlerData<'_>) {
 	handler_data.bot_data.next_account += 1;
 
 	let description = format!(
-		"Successfully created {} which is owned by {}",
+		"successfully created {} which is owned by {}",
 		bill_name,
 		handler_data.bot_data.personal_account_name(&handler_data.user)
 	);
