@@ -493,17 +493,6 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 					send_outgoing_message.send(serde_json::to_string(&identify).unwrap()).await.unwrap();
 					tokio::spawn(dispatch_msg(send_ev.clone(), d.heartbeat_interval, MainMessage::Heartbeat));
-
-					if let Some(ping_squad) = bot_data.bills.get(&82) {
-						for &subscriber in &ping_squad.subscribers {
-							let recipient_id = bot_data.users.account_owner(subscriber);
-							let embed = Embed::standard().with_title("Cheesebot Online").with_description(format!(
-								"Cheesebot is now online. You received this message because you are subscribed to the {} bill.",
-								&ping_squad.name
-							));
-							dm_embed(client, embed, recipient_id).await;
-						}
-					}
 				}
 				GatewayRecieve::HeartbeatACK => {}
 			},
@@ -519,6 +508,17 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 				let day = chrono::Utc::now().num_days_from_ce();
 				if day != bot_data.last_day {
+					if let Some(ping_squad) = bot_data.bills.get(&82) {
+						for &subscriber in &ping_squad.subscribers {
+							let recipient_id = bot_data.users.account_owner(subscriber);
+							let embed = Embed::standard().with_title("Cheesebot Online").with_description(format!(
+								"Cheesebot is now online. You received this message because you are subscribed to the {} bill.",
+								&ping_squad.name
+							));
+							dm_embed(client, embed, recipient_id).await;
+						}
+					}
+
 					bot_data.last_day = day;
 					treasury_balance(bot_data, client).await;
 					twaddle(bot_data, client).await;

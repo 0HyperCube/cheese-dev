@@ -1,5 +1,6 @@
 use crate::bot_data::*;
 use crate::utilities::*;
+use chrono::Datelike;
 use discord::*;
 
 /// Handles the `/about` command
@@ -110,7 +111,7 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	}
 
 	let cheese_user = handler_data.bot_data.users.users.get_mut(&handler_data.user.id).unwrap();
-	if chrono::Utc::now() - cheese_user.last_pay < chrono::Duration::hours(15) {
+	if cheese_user.last_pay.num_days_from_ce() == chrono::Utc::now().num_days_from_ce() {
 		let descripition = format!(
 			"You can claim this benefit only once per day. You have last claimed it {} hours ago.",
 			(chrono::Utc::now() - cheese_user.last_pay).num_hours()
