@@ -1,11 +1,6 @@
 (
 	users: (
 		users: {
-			"762325231925854231": (
-				account: 64,
-				last_pay: "2023-05-11T16:59:44.282811593Z",
-				organisations: [],
-			),
 			"722468356711776269": (
 				account: 722468356711776269,
 				last_pay: "2022-05-07T19:07:14.821354378Z",
@@ -14,38 +9,32 @@
 					19,
 				],
 			),
-			"709767987242074116": (
-				account: 709767987242074116,
-				last_pay: "2022-11-27T12:14:29.927893205Z",
+			"1068971424292814909": (
+				account: 79,
+				last_pay: "2023-05-25T20:09:14.196324651Z",
 				organisations: [],
 			),
-			"887020108696920116": (
-				account: 887020108696920116,
-				last_pay: "2023-05-17T15:42:36.999152893Z",
+			"630073509137350690": (
+				account: 630073509137350690,
+				last_pay: "2023-05-15T06:31:29.215237227Z",
 				organisations: [
-					7,
-					11,
-					18,
-					61,
-					38,
-					65,
-					69,
-					0,
+					12,
+					4,
+					47,
+					48,
+					51,
+					52,
+					53,
 				],
+			),
+			"764206694841974795": (
+				account: 68,
+				last_pay: "2023-05-25T20:09:04.624770767Z",
+				organisations: [],
 			),
 			"1087428990547009556": (
 				account: 76,
 				last_pay: "2023-05-17T15:43:53.043454154Z",
-				organisations: [],
-			),
-			"764206694841974795": (
-				account: 68,
-				last_pay: "2023-05-16T16:06:56.885199739Z",
-				organisations: [],
-			),
-			"825304836894883840": (
-				account: 80,
-				last_pay: "-262144-01-01T00:00:00Z",
 				organisations: [],
 			),
 			"653127445922316299": (
@@ -62,37 +51,33 @@
 				last_pay: "2023-04-22T19:54:45.176649859Z",
 				organisations: [],
 			),
-			"888167676512440352": (
-				account: 888167676512440352,
-				last_pay: "2022-03-03T17:46:43.140132233Z",
-				organisations: [],
-			),
-			"630073509137350690": (
-				account: 630073509137350690,
-				last_pay: "2023-05-15T06:31:29.215237227Z",
+			"887020108696920116": (
+				account: 887020108696920116,
+				last_pay: "2023-05-17T15:42:36.999152893Z",
 				organisations: [
-					12,
-					4,
-					47,
-					48,
-					51,
-					52,
-					53,
+					7,
+					11,
+					18,
+					61,
+					38,
+					65,
+					69,
+					0,
 				],
+			),
+			"762325231925854231": (
+				account: 64,
+				last_pay: "2023-05-11T16:59:44.282811593Z",
+				organisations: [],
 			),
 			"758042322364792974": (
 				account: 24,
-				last_pay: "2023-05-17T17:40:19.953088507Z",
-				organisations: [],
-			),
-			"1068971424292814909": (
-				account: 79,
-				last_pay: "2023-05-17T15:47:08.942795458Z",
+				last_pay: "2023-05-25T21:59:58.160481854Z",
 				organisations: [],
 			),
 			"895756129026576474": (
 				account: 895756129026576474,
-				last_pay: "2023-05-01T10:58:51.122430790Z",
+				last_pay: "2023-05-25T21:15:29.813933434Z",
 				organisations: [
 					70,
 					71,
@@ -102,117 +87,156 @@
 					75,
 				],
 			),
+			"709767987242074116": (
+				account: 709767987242074116,
+				last_pay: "2022-11-27T12:14:29.927893205Z",
+				organisations: [],
+			),
+			"888167676512440352": (
+				account: 888167676512440352,
+				last_pay: "2022-03-03T17:46:43.140132233Z",
+				organisations: [],
+			),
+			"825304836894883840": (
+				account: 80,
+				last_pay: "-262144-01-01T00:00:00Z",
+				organisations: [],
+			),
 		},
 	),
 	accounts: (
 		personal_accounts: {
-			895756129026576474: (
-				name: "Elliott M.",
-				balance: 1016,
-			),
-			653127445922316299: (
-				name: "d man the almighty, heir of the soon to be new new cheeseland royal properties",
-				balance: 16271,
-			),
-			64: (
-				name: "аe",
-				balance: 1335,
-			),
-			24: (
-				name: "The_Toppat_Man",
-				balance: 1560,
-				subscribed_bills: [
-					82,
-				],
-			),
-			76: (
-				name: "someoneee",
-				balance: 6203,
-			),
-			709767987242074116: (
-				name: "Adam",
-				balance: 1083,
-			),
-			888167676512440352: (
-				name: "Chino",
-				balance: 399,
-			),
-			68: (
-				name: "18XYang",
-				balance: 4537,
-			),
-			79: (
-				name: "fough4884",
-				balance: 1671,
-			),
-			722468356711776269: (
-				name: "Elliot F.",
-				balance: 1116,
-			),
-			630073509137350690: (
-				name: "James",
-				balance: 12110,
-			),
-			887020108696920116: (
-				name: "Alan",
-				balance: 3696,
-				subscribed_bills: [
-					82,
-				],
-			),
 			80: (
 				name: "!PPPretzel",
 				balance: 0,
 			),
+			64: (
+				name: "аe",
+				balance: 1261,
+			),
 			737928480389333004: (
 				name: "Louis",
-				balance: 16099,
+				balance: 14839,
+			),
+			722468356711776269: (
+				name: "Elliot F.",
+				balance: 1057,
+			),
+			709767987242074116: (
+				name: "Adam",
+				balance: 1027,
+			),
+			895756129026576474: (
+				name: "Elliott M.",
+				balance: 1150,
+			),
+			76: (
+				name: "someoneee",
+				balance: 5788,
+			),
+			68: (
+				name: "18XYang",
+				balance: 4439,
+			),
+			79: (
+				name: "fough4884",
+				balance: 1774,
+			),
+			653127445922316299: (
+				name: "d man the almighty, heir of the soon to be new new cheeseland royal properties",
+				balance: 14993,
+			),
+			888167676512440352: (
+				name: "Chino",
+				balance: 379,
+			),
+			630073509137350690: (
+				name: "James",
+				balance: 11153,
+			),
+			887020108696920116: (
+				name: "Alan",
+				balance: 3241,
+				subscribed_bills: [
+					82,
+				],
+			),
+			24: (
+				name: "The_Toppat_Man",
+				balance: 1570,
+				subscribed_bills: [
+					82,
+				],
 			),
 		},
 		organisation_accounts: {
-			73: (
-				name: "The NFT Co.",
-				balance: 1200,
+			38: (
+				name: "\u{8}\u{8}\u{8}\u{7f}\u{7f}\u{7f}\u{7f}",
+				balance: 12,
+			),
+			70: (
+				name: "Elliott1",
+				balance: 247,
 			),
 			71: (
 				name: "Elliott2",
-				balance: 264,
+				balance: 247,
 			),
-			7: (
-				name: "Auction House",
-				balance: 75,
+			69: (
+				name: "CheeseChess",
+				balance: 8168,
 			),
-			22: (
-				name: "the d man empire",
-				balance: 0,
+			51: (
+				name: "Constitution",
+				balance: 82,
 			),
-			52: (
-				name: "Petitions",
-				balance: 90,
-			),
-			48: (
-				name: "CMA",
-				balance: 108,
+			74: (
+				name: "Official Treasury (cheeselandic government)",
+				balance: 247,
 			),
 			66: (
 				name: "20k CheeseCoin",
 				balance: 0,
 			),
-			74: (
-				name: "Official Treasury (cheeselandic government)",
-				balance: 264,
+			11: (
+				name: "Short story long",
+				balance: 60,
 			),
-			69: (
-				name: "CheeseChess",
-				balance: 9034,
+			48: (
+				name: "CMA",
+				balance: 99,
+			),
+			18: (
+				name: "Short Story Long Plus",
+				balance: 53,
+			),
+			19: (
+				name: "jeffrey/",
+				balance: 0,
 			),
 			72: (
 				name: "Elliott3",
-				balance: 234,
+				balance: 219,
 			),
-			51: (
-				name: "Constitution",
-				balance: 90,
+			22: (
+				name: "the d man empire",
+				balance: 0,
+			),
+			0: (
+				name: "Treasury",
+				balance: 72187,
+			),
+			73: (
+				name: "The NFT Co.",
+				balance: 1123,
+			),
+			61: (
+				name: "Delhi Sands Flower Loving Fly Conservation Society and Church",
+				balance: 0,
+			),
+			3: (
+				name: "Casino",
+				balance: 1,
 			),
 			65: (
 				name: "MoRA",
@@ -220,27 +244,27 @@
 			),
 			47: (
 				name: "parliament",
-				balance: 88,
+				balance: 81,
 			),
-			61: (
-				name: "Delhi Sands Flower Loving Fly Conservation Society and Church",
+			75: (
+				name: "Cheesechess",
+				balance: 108,
+			),
+			4: (
+				name: "Gladvertising",
 				balance: 0,
 			),
-			11: (
-				name: "Short story long",
-				balance: 67,
+			52: (
+				name: "Petitions",
+				balance: 82,
 			),
-			3: (
-				name: "Casino",
-				balance: 2,
-			),
-			70: (
-				name: "Elliott1",
-				balance: 264,
+			53: (
+				name: "Contracts",
+				balance: 82,
 			),
 			12: (
 				name: "Go Consulting Ltd.",
-				balance: 4087,
+				balance: 3664,
 				owned_bills: [
 					67,
 					82,
@@ -249,44 +273,20 @@
 					82,
 				],
 			),
-			53: (
-				name: "Contracts",
-				balance: 90,
-			),
 			25: (
 				name: "a",
 				balance: 0,
 			),
-			0: (
-				name: "Treasury",
-				balance: 66558,
-			),
-			38: (
-				name: "\u{8}\u{8}\u{8}\u{7f}\u{7f}\u{7f}\u{7f}",
-				balance: 14,
-			),
-			75: (
-				name: "Cheesechess",
-				balance: 116,
-			),
-			18: (
-				name: "Short Story Long Plus",
-				balance: 59,
-			),
-			4: (
-				name: "Gladvertising",
-				balance: 0,
-			),
-			19: (
-				name: "jeffrey/",
-				balance: 0,
+			7: (
+				name: "Auction House",
+				balance: 67,
 			),
 		},
 	),
 	bills: {
 		82: (
 			name: "Cheesebot Ping Squad",
-			last_pay: 738655,
+			last_pay: 738662,
 			interval: 7,
 			amount: 100,
 			owner: 12,
@@ -298,7 +298,7 @@
 		),
 		67: (
 			name: "Cheese Bot",
-			last_pay: 738651,
+			last_pay: 738665,
 			interval: 7,
 			amount: 1500,
 			owner: 12,
@@ -312,8 +312,8 @@
 		(4294967295, 10.0),
 	],
 	vat: 2.0,
-	last_wealth_tax: "2023-05-13T05:00:00Z",
-	last_day: 738657,
+	last_wealth_tax: "2023-05-20T05:00:00Z",
+	last_day: 738665,
 	treasury_balances: [
 		82398,
 		80898,
@@ -510,6 +510,7 @@
 		73956,
 		73156,
 		72356,
+		72987,
 	],
 	wealth_taxes: [
 		4869,
@@ -546,11 +547,12 @@
 		6999,
 		6515,
 		6300,
+		6429,
 	],
 	election: {
+		"722468356711776269": [],
 		"895756129026576474": [],
 		"758042322364792974": [],
-		"722468356711776269": [],
 	},
 	previous_time: "2023-05-14T08:47:13.404186417Z",
 	previous_results: "Elliot F., 1\nThe_Toppat_Man, 0\nElliott M., 0\n",
