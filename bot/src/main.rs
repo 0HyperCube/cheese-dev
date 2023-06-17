@@ -200,7 +200,7 @@ fn check_election(bot_data: &mut BotData) {
 	let days_since = ((chrono::Utc::now() - bot_data.previous_time).num_hours()) / 24;
 	let days_from_sunday = chrono::Utc::now().weekday().num_days_from_sunday();
 
-	if days_from_sunday > 2 || days_since < 4 {
+	if (days_from_sunday > 2 && days_from_sunday != 6) || days_since < 4 {
 		return;
 	}
 	bot_data.previous_time = chrono::Utc::now();
