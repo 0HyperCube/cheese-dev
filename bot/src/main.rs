@@ -393,6 +393,7 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 					},
 				));
 			dm_embed(client, embed, bot_data.users.account_owner(bill.owner)).await;
+			bot_data.accounts.account_mut(bill.owner).balance += bill_owner_total;
 		}
 	}
 
