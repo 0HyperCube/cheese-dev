@@ -159,7 +159,7 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	recipiant.balance += amount;
 
 	let reciever_message = format!(
-		"Your account - {} - has recieved {} from {}.",
+		"Your account - {} - has received {} from {}.",
 		recipiant.name,
 		format_cheesecoin(amount),
 		payer_name

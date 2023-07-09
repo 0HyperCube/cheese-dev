@@ -118,7 +118,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 			.await
 			.unwrap();
 		}
-		_ => warn!("Recieved interaction of type {:?} which was not handled", command_type),
+		_ => warn!("received interaction of type {:?} which was not handled", command_type),
 	}
 }
 
@@ -134,7 +134,7 @@ enum MainMessage {
 
 async fn read_websocket(mut read: Read, send_ev: Sender<MainMessage>) {
 	while let Some(Ok(Message::Text(text))) = read.next().await {
-		debug!("Recieved text {}", text);
+		debug!("received text {}", text);
 		match serde_json::from_str(&text) {
 			Ok(deserialised) => {
 				if send_ev.send(MainMessage::Gateway(deserialised)).await.is_err() {
@@ -448,7 +448,7 @@ async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
 /// Runs the bot
 async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 	let gateway = GatewayMeta::get_gateway_meta(client).await.unwrap();
-	info!("Recieved gateway metadata: {:?}", gateway);
+	info!("received gateway metadata: {:?}", gateway);
 
 	let (send_ev, mut recieve_ev) = async_channel::unbounded();
 
@@ -468,7 +468,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 				GatewayRecieve::Dispatch { d, s } => {
 					sequence_number = Some(s);
 
-					debug!("Recieved dispatch {:?}", d);
+					debug!("received dispatch {:?}", d);
 					match d {
 						Dispatch::Ready(r) => create_commands(client, &r.application.id).await,
 						Dispatch::InteractionCreate(interaction) => handle_interaction(interaction, client, bot_data).await,

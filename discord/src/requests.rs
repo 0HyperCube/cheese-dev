@@ -56,7 +56,7 @@ impl DiscordClient {
 
 			// And then, if the request gets a response...
 			let status = res.status();
-			debug!("Recieved {} in {}ms", status, now.elapsed().as_millis());
+			debug!("received {} in {}ms", status, now.elapsed().as_millis());
 
 			// Concatenate the body stream into a single buffer...
 
@@ -67,7 +67,7 @@ impl DiscordClient {
 			// Log an error if the request was not sucessful (including the body as discord sends error information)
 			if !status.is_success() {
 				error!(
-					"Unsucsessful request. Recieved response {} with body {}\n\nSending {} to {} with body:\n{}",
+					"Unsucsessful request. received response {} with body {}\n\nSending {} to {} with body:\n{}",
 					status, utf, method, uri, body
 				);
 			}

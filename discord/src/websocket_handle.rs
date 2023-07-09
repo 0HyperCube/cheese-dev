@@ -38,7 +38,7 @@ pub async fn connect_gateway(address: String, header: String) -> Connection {
 	Connection { send_outgoing_message, read }
 }
 
-/// Sends outgoing messages that are recieved from the async-channel
+/// Sends outgoing messages that are received from the async-channel
 async fn outgoing_messages(
 	mut write: SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>,
 	mut handle_outgoing_message: Receiver<String>,
