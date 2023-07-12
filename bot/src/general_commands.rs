@@ -92,13 +92,11 @@ pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 /// Handles the `/claim rollcall` command
 pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	const MP_ROLL: &str = "985804444237172797";
+	const PRESIDENT_ROLL: &str = "907660552938061834";
 
-	let is_mp = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id)
-		.await
-		.map_or(false, |user| {
-			info!("User {user:?}");
-			user.roles.contains(&MP_ROLL.to_string())
-		});
+	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
+	let is_mp = rolls.map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
+	let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));
 
 	if !is_mp {
 		let descripition = "You can only claim this benefit if you are an MP (if you are just ask to get the MP roll).";
@@ -126,7 +124,8 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	cheese_user.last_pay = chrono::Utc::now();
 
 	let recipiant = cheese_user.account;
-	let (_, recipiant_message) = transact(handler_data, recipiant, TREASURY, 2.);
+	let amount = if is_president { 4. } else { 2. };
+	let (_, recipiant_message) = transact(handler_data, recipiant, TREASURY, amount);
 
 	if let Some(message) = recipiant_message {
 		respond_with_embed(handler_data, Embed::standard().with_title("Claim Rollcall").with_description(message)).await;
