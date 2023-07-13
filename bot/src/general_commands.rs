@@ -95,7 +95,7 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	const PRESIDENT_ROLL: &str = "907660552938061834";
 
 	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
-	let is_mp = rolls.map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
+	let is_mp = rolls.as_ref().map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
 	let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));
 
 	if !is_mp {
