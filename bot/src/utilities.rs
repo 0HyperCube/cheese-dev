@@ -166,7 +166,7 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	);
 
 	let sender_message = format!(
-		"Sucsessfully transfered {} from {} to {}.",
+		"Successfully transfered {} from {} to {}.",
 		format_cheesecoin(amount),
 		payer_name,
 		recipiant.name

@@ -1,4 +1,6 @@
 #![feature(int_roundings)]
+#![feature(panic_update_hook)]
+use std::panic;
 
 use chrono::Datelike;
 use discord::{async_channel::Sender, *};
@@ -32,6 +34,13 @@ fn init_logger() {
 	.unwrap();
 
 	info!("Initalised logger!");
+
+	panic::update_hook(
+		(move |prev, info: &panic::PanicInfo<'_>| {
+			info!("{:?}", info.to_string());
+			prev(info);
+		}),
+	);
 }
 
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
