@@ -15,3 +15,18 @@ pub struct GuildMember {
 	nick: Option<String>,
 	roles: Vec<String>,
 }
+
+#[request(add_guild_role = POST "/guilds/{guild_id}/roles" as guild_id)]
+#[request(modify_guild_role = POST "/guilds/{guild_id}/roles/{role_id}" as guild_id, role_id)]
+#[discord_struct]
+pub struct Role {
+	id: String,
+	name: String,
+	color: u32,
+}
+
+#[request(get_guild_roles = GET "/guilds/{guild_id}/roles" as guild_id)]
+#[discord_struct]
+pub struct RolesList {
+	roles_list: Vec<ApplicationCommand>,
+}

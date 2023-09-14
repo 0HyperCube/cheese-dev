@@ -133,10 +133,19 @@ pub async fn bill_subscribe(handler_data: &mut HandlerData<'_>) {
 	let bill = bot_data.bills.get_mut(&bill_id).unwrap();
 	bill.subscribers.push(from);
 	let owner = bot_data.accounts.account(bill.owner).name.clone();
-	let bill_owner = format_bill(bill, owner);
+	let bill_owner = format_bill(bill, owner.clone());
 	let from_account = bot_data.accounts.account_mut(from);
 	from_account.subscribed_bills.push(bill_id);
 	let description = format!("Subscribed to {} from account {}", bill_owner, from_account.name);
+
+	dm_embed(
+		handler_data.client,
+		Embed::standard()
+			.with_title("New subscriber")
+			.with_description(format!("{} subscribed to your bill {}", from_account.name, bill_owner)),
+		owner,
+	)
+	.await;
 
 	respond_with_embed(
 		handler_data,
@@ -159,10 +168,10 @@ pub async fn bill_unsubscribe(handler_data: &mut HandlerData<'_>) {
 			return;
 		}
 	};
-	let user_owned_accounts = {
-		let user = bot_data.cheese_user(&handler_data.user);
-		user.organisations.iter().copied().chain([user.account]).collect::<Vec<_>>()
-	};
+
+	let user = bot_data.cheese_user(&handler_data.user);
+	let user_owned_accounts = user.organisations.iter().copied().chain([user.account]).collect::<Vec<_>>();
+	let username = bot_data.accounts.account(user.account).name.clone();
 
 	for account in &user_owned_accounts {
 		let account = bot_data.accounts.account_mut(*account);
@@ -172,8 +181,17 @@ pub async fn bill_unsubscribe(handler_data: &mut HandlerData<'_>) {
 	let bill = bot_data.bills.get_mut(&bill_id).unwrap();
 	bill.subscribers.retain(|account| !user_owned_accounts.contains(account));
 	let owner = bot_data.accounts.account(bill.owner).name.clone();
-	let bill_owner = format_bill(bill, owner);
+	let bill_owner = format_bill(bill, owner.clone());
 	let description = format!("Unsubscribed to {} ", bill_owner);
+
+	dm_embed(
+		handler_data.client,
+		Embed::standard()
+			.with_title("Lost subscriber")
+			.with_description(format!("{} unsubscribed to your bill {}", username, bill_owner)),
+		owner,
+	)
+	.await;
 
 	respond_with_embed(
 		handler_data,
@@ -185,7 +203,7 @@ pub async fn bill_unsubscribe(handler_data: &mut HandlerData<'_>) {
 pub async fn bill_view(handler_data: &mut HandlerData<'_>) {
 	let bot_data = &mut handler_data.bot_data;
 
-	let mut result = format!("**Bills you are subscribed to**");
+	let mut result = format!("**Bills your accounts are subscribed to**");
 	let user_owned_accounts = {
 		let user = bot_data.cheese_user(&handler_data.user);
 		user.organisations.iter().copied().chain([user.account]).collect::<Vec<_>>()
@@ -194,21 +212,22 @@ pub async fn bill_view(handler_data: &mut HandlerData<'_>) {
 	let mut subscribed_bills = false;
 	for account in &user_owned_accounts {
 		let account = bot_data.accounts.account(*account);
+		if account.subscribed_bills.is_empty() {
+			continue;
+		}
+		let _ = write!(result, "\n{}:\n```", account.name);
+
 		for bill_id in &account.subscribed_bills {
 			if let Some(bill) = bot_data.bills.get(&bill_id) {
-				if !subscribed_bills {
-					let _ = write!(result, "```\n{:-20} {}", "Subscribed account", "Bill");
-				}
 				let owner = bot_data.accounts.account(bill.owner).name.clone();
-				let _ = write!(result, "\n{:-20} {}", account.name, format_bill(bill, owner));
+				let _ = write!(result, "\n{}", format_bill(bill, owner));
 				subscribed_bills = true;
 			}
 		}
+		let _ = write!(result, "\n```");
 	}
 	if !subscribed_bills {
 		result += "\nNone";
-	} else {
-		result += "\n```";
 	}
 
 	let _ = write!(result, "\n\n**Owned Bills**");
@@ -217,14 +236,15 @@ pub async fn bill_view(handler_data: &mut HandlerData<'_>) {
 		let account = bot_data.accounts.account(*account);
 		for bill_id in &account.owned_bills {
 			if let Some(bill) = bot_data.bills.get(&bill_id) {
-				result += "\n```";
 				let _ = write!(result, "\n{}", format_bill(bill, account.name.clone()));
 				result += "\nSubscribers:";
+				result += "\n```";
+
 				if bill.subscribers.is_empty() {
-					result += "\n    None";
+					result += "\nNone";
 				} else {
 					for subscriber in &bill.subscribers {
-						result += "\n    ";
+						result += "\n";
 						result += &bot_data.accounts.account(*subscriber).name;
 					}
 				}

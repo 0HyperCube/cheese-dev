@@ -233,6 +233,36 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 						.with_description("View results of last election."),
 				),
 		);
+
+	let role = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("role")
+		.with_description("Cosmetic role options")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::SubCommandGroup)
+				.with_name("assign")
+				.with_description("Assign yourself a cosmetic role for a fee.")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::Number)
+						.with_name("r")
+						.with_required(true)
+						.option_type,
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::Number)
+						.with_name("g")
+						.with_required(true),
+				)
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::Number)
+						.with_name("b")
+						.with_required(true),
+				),
+		);
 	ApplicationCommandList::new()
 		.with_commands(about)
 		.with_commands(balances)

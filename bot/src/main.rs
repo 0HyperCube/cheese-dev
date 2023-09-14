@@ -18,6 +18,7 @@ mod bill_commands;
 mod general_commands;
 mod organisation_commands;
 mod parliament_commands;
+mod role_commands;
 
 #[macro_use]
 extern crate log;
@@ -35,12 +36,10 @@ fn init_logger() {
 
 	info!("Initalised logger!");
 
-	panic::update_hook(
-		(move |prev, info: &panic::PanicInfo<'_>| {
-			info!("{:?}", info.to_string());
-			prev(info);
-		}),
-	);
+	panic::update_hook(move |prev, info: &panic::PanicInfo<'_>| {
+		info!("{:?}", info.to_string());
+		prev(info);
+	});
 }
 
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
@@ -71,6 +70,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"bill subscribe" => bill_commands::bill_subscribe(&mut handler_data).await,
 				"bill unsubscribe" => bill_commands::bill_unsubscribe(&mut handler_data).await,
 				"bill view" => bill_commands::bill_view(&mut handler_data).await,
+				"role assign" => role_commands::role_assign(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
 		}
@@ -344,6 +344,7 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 			for _payment in 0..((bot_data.last_day - bill.last_pay).div_floor(bill.interval)) {
 				let from = bot_data.accounts.account_mut(payer);
 
+				bill_owner_result += "\n";
 				if from.balance >= bill.amount {
 					from.balance -= bill.amount;
 					bill_owner_total += bill.amount;
