@@ -237,29 +237,30 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 	let role = ApplicationCommand::new()
 		.with_command_type(CommandType::Chat)
 		.with_name("role")
-		.with_description("Cosmetic role options")
+		.with_description("Cosmetic role options (15cc)")
 		.with_options(
 			ApplicationCommandOption::new()
-				.with_option_type(CommandOptionType::SubCommandGroup)
 				.with_name("assign")
 				.with_description("Assign yourself a cosmetic role for a fee.")
 				.with_options(
 					ApplicationCommandOption::new()
 						.with_option_type(CommandOptionType::Number)
 						.with_name("r")
-						.with_required(true)
-						.option_type,
+						.with_description("Red (0-255)")
+						.with_required(true),
 				)
 				.with_options(
 					ApplicationCommandOption::new()
 						.with_option_type(CommandOptionType::Number)
 						.with_name("g")
+						.with_description("Green (0-255)")
 						.with_required(true),
 				)
 				.with_options(
 					ApplicationCommandOption::new()
 						.with_option_type(CommandOptionType::Number)
 						.with_name("b")
+						.with_description("Blue (0-255)")
 						.with_required(true),
 				),
 		);
@@ -271,6 +272,7 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 		.with_commands(rollcall)
 		.with_commands(organisation)
 		.with_commands(parliament)
+		.with_commands(role)
 		.put_bulk_override_global(client, application_id)
 		.await
 		.unwrap();

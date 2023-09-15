@@ -16,17 +16,13 @@ pub struct GuildMember {
 	roles: Vec<String>,
 }
 
-#[request(add_guild_role = POST "/guilds/{guild_id}/roles" as guild_id)]
-#[request(modify_guild_role = POST "/guilds/{guild_id}/roles/{role_id}" as guild_id, role_id)]
+#[request(create_role return Role = POST "/guilds/{guild_id}/roles" as guild_id)]
+#[request(update_role = PATCH "/guilds/{guild_id}/roles/{role_id}" as guild_id, role_id)]
+#[request(guild_roles return Vec<Role> = GET "/guilds/{guild_id}/roles" as guild_id)]
 #[discord_struct]
 pub struct Role {
+	#[serde(skip_serializing_if = "String::is_empty")]
 	id: String,
 	name: String,
 	color: u32,
-}
-
-#[request(get_guild_roles = GET "/guilds/{guild_id}/roles" as guild_id)]
-#[discord_struct]
-pub struct RolesList {
-	roles_list: Vec<ApplicationCommand>,
 }

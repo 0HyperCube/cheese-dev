@@ -1,4 +1,4 @@
-use std::{collections::HashMap, string::FromUtf8Error};
+use std::string::FromUtf8Error;
 
 use hyper::{
 	client::HttpConnector,
@@ -13,13 +13,12 @@ use hyper_tls::HttpsConnector;
 pub enum NetError {
 	Hyper(hyper::Error),
 	Utf8(FromUtf8Error),
-	DeJson(serde_json::Error),
+	DeJson(serde_json::Error, String),
 }
 
 pub struct DiscordClient {
 	pub token: String,
 	client: Client<HttpsConnector<HttpConnector>>,
-	cached_get: HashMap<String, String>,
 }
 impl DiscordClient {
 	pub const API: &'static str = "https://discord.com/api/v10";
@@ -31,50 +30,46 @@ impl DiscordClient {
 		Self {
 			token: token.to_string(),
 			client: Client::builder().build::<_, hyper::Body>(https),
-			cached_get: HashMap::new(),
 		}
 	}
 
 	/// Makes the specified request
-	pub async fn request<'a>(&'a mut self, uri: &'a str, body: String, method: Method) -> Result<&'a str, NetError> {
-		if method != Method::GET || !self.cached_get.contains_key(uri) {
-			debug!("Sending {:?} to {} {}", method, &uri, &body);
+	pub async fn request<'a>(&'a mut self, uri: &'a str, body: String, method: Method) -> Result<String, NetError> {
+		debug!("Sending {:?} to {} {}", method, &uri, &body);
 
-			let now = tokio::time::Instant::now();
-			let mut req = Request::builder()
-				.method(&method)
-				.uri(uri)
-				.body(Body::from(body.clone()))
-				.expect("request builder");
+		let now = tokio::time::Instant::now();
+		let mut req = Request::builder()
+			.method(&method)
+			.uri(uri)
+			.body(Body::from(body.clone()))
+			.expect("request builder");
 
-			req.headers_mut()
-				.insert(AUTHORIZATION, HeaderValue::from_str(&format!("Bot {}", self.token)).unwrap());
+		req.headers_mut()
+			.insert(AUTHORIZATION, HeaderValue::from_str(&format!("Bot {}", self.token)).unwrap());
 
-			req.headers_mut().insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+		req.headers_mut().insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
-			let res = self.client.request(req).await.expect("Failed to request");
+		let res = self.client.request(req).await.expect("Failed to request");
 
-			// And then, if the request gets a response...
-			let status = res.status();
-			debug!("received {} in {}ms", status, now.elapsed().as_millis());
+		// And then, if the request gets a response...
+		let status = res.status();
+		debug!("received {} in {}ms", status, now.elapsed().as_millis());
 
-			// Concatenate the body stream into a single buffer...
+		// Concatenate the body stream into a single buffer...
 
-			let bytes = hyper::body::to_bytes(res).await.map_err(NetError::Hyper)?;
+		let bytes = hyper::body::to_bytes(res).await.map_err(NetError::Hyper)?;
 
-			let utf = String::from_utf8(bytes.to_vec()).map_err(NetError::Utf8)?;
+		let utf = String::from_utf8(bytes.to_vec()).map_err(NetError::Utf8)?;
 
-			// Log an error if the request was not sucessful (including the body as discord sends error information)
-			if !status.is_success() {
-				error!(
-					"Unsucsessful request. received response {} with body {}\n\nSending {} to {} with body:\n{}",
-					status, utf, method, uri, body
-				);
-			}
-
-			self.cached_get.insert(uri.to_string(), utf);
+		// Log an error if the request was not sucessful (including the body as discord sends error information)
+		if !status.is_success() {
+			error!(
+				"Unsucsessful request. received response {} with body {}\n\nSending {} to {} with body:\n{}",
+				status, utf, method, uri, body
+			);
 		}
-		Ok(self.cached_get.get(uri).unwrap())
+
+		Ok(utf)
 	}
 
 	/// Connects the client to the gateway with the current token

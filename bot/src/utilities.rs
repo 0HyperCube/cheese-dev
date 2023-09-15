@@ -77,6 +77,7 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 				account: bot_data.next_account,
 				last_pay: chrono::DateTime::<chrono::Utc>::MIN_UTC,
 				organisations: Vec::new(),
+				role_id: None,
 			},
 		);
 		bot_data.accounts.personal_accounts.insert(

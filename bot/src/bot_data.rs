@@ -16,6 +16,8 @@ pub struct CheeseUser {
 	pub account: AccountId,
 	pub last_pay: chrono::DateTime<chrono::Utc>,
 	pub organisations: Vec<AccountId>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub role_id: Option<String>,
 }
 
 /// A bill which has been created by a particular account
@@ -102,7 +104,7 @@ pub struct BotData {
 	pub previous_time: chrono::DateTime<chrono::Utc>,
 	pub previous_results: String,
 	#[serde(skip)]
-	pub changed: bool,
+	pub file_path: String,
 }
 
 impl Default for BotData {
@@ -132,7 +134,7 @@ impl Default for BotData {
 			election: HashMap::new(),
 			previous_time: chrono::Utc::now(),
 			previous_results: "No previous results".into(),
-			changed: true,
+			file_path: String::new(),
 		}
 	}
 }
@@ -141,6 +143,11 @@ impl BotData {
 	/// Get the cheese user information given a discord user
 	pub fn cheese_user<'a>(&'a self, user: &User) -> &'a CheeseUser {
 		&self.users.users[&user.id]
+	}
+
+	/// Get the cheese user information given a discord user
+	pub fn cheese_user_mut<'a>(&'a mut self, user: &User) -> &'a mut CheeseUser {
+		self.users.users.get_mut(&user.id).unwrap()
 	}
 
 	/// Get the personal account name from a discord user
@@ -296,6 +303,11 @@ impl BotData {
 			.iter()
 			.map(|(bill_id, bill)| (bill, self.accounts.account(bill.owner).name.clone(), bill_id))
 			.map(|(bill, account_name, &bill_id)| (format_bill(bill, account_name), bill_id))
+	}
+
+	pub fn save(&self) {
+		let new = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::new().indentor(String::from("\t"))).unwrap();
+		std::fs::write(&self.file_path, new).unwrap();
 	}
 }
 

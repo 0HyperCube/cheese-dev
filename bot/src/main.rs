@@ -43,7 +43,6 @@ fn init_logger() {
 }
 
 async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient, bot_data: &mut BotData) {
-	bot_data.changed = true;
 	let command_type = interaction.interaction_type.clone();
 	let ConstructedData {
 		command,
@@ -129,6 +128,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 		}
 		_ => warn!("received interaction of type {:?} which was not handled", command_type),
 	}
+	bot_data.save();
 }
 
 #[derive(Clone)]
@@ -137,7 +137,6 @@ enum MainMessage {
 	GatewayClosed,
 	Heartbeat,
 	WealthTax,
-	SaveFile,
 	CheckElection,
 }
 
@@ -197,14 +196,6 @@ async fn run_loop() {
 	}
 }
 
-fn save_file(bot_data: &mut BotData, path: &str) {
-	if bot_data.changed {
-		bot_data.changed = false;
-		let new = ron::ser::to_string_pretty(bot_data, ron::ser::PrettyConfig::new().indentor(String::from("\t"))).unwrap();
-		std::fs::write(path, new).unwrap();
-	}
-}
-
 fn check_election(bot_data: &mut BotData) {
 	let days_since = ((chrono::Utc::now() - bot_data.previous_time).num_hours()) / 24;
 	let days_from_sunday = chrono::Utc::now().weekday().num_days_from_sunday();
@@ -214,7 +205,6 @@ fn check_election(bot_data: &mut BotData) {
 	}
 	bot_data.previous_time = chrono::Utc::now();
 	bot_data.previous_results = String::new();
-	bot_data.changed = true;
 
 	let mut votes = bot_data.election.iter().collect::<Vec<_>>();
 	votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
@@ -229,110 +219,114 @@ fn check_election(bot_data: &mut BotData) {
 	for (_, votes) in bot_data.election.iter_mut() {
 		*votes = Vec::new();
 	}
+	bot_data.save();
 }
 
 async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
-	if (chrono::Utc::now() - bot_data.last_wealth_tax) > chrono::Duration::hours(24 * 7 - 4) {
-		bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24 * 7);
-		bot_data.changed = true;
-		info!("Applying wealth tax.");
+	if (chrono::Utc::now() - bot_data.last_wealth_tax) <= chrono::Duration::hours(24 * 7 - 4) {
+		return;
+	}
 
-		// Applies welth tax to a specific account returning the log information for the user
-		fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> (String, u32) {
-			let account = bot_data.accounts.account_mut(account);
+	bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24 * 7);
+	info!("Applying wealth tax.");
 
-			let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
-			account.balance -= tax;
+	// Applies welth tax to a specific account returning the log information for the user
+	fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> (String, u32) {
+		let account = bot_data.accounts.account_mut(account);
 
-			let result = format!(
-				"\n{:20} -{:9} {}",
-				name.unwrap_or(&account.name),
-				format_cheesecoin(tax),
-				format_cheesecoin(account.balance)
-			);
-			bot_data.treasury_account_mut().balance += tax;
-			(result, tax)
-		}
+		let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
+		account.balance -= tax;
 
-		let users = (&bot_data).users.users.keys().into_iter().map(|x| x.clone()).collect::<Vec<_>>();
-		let mut total_tax = 0;
+		let result = format!(
+			"\n{:20} -{:9} {}",
+			name.unwrap_or(&account.name),
+			format_cheesecoin(tax),
+			format_cheesecoin(account.balance)
+		);
+		bot_data.treasury_account_mut().balance += tax;
+		(result, tax)
+	}
 
-		for user_id in users {
-			let origional_wealth = {
-				bot_data.accounts.account(bot_data.users.users[&user_id].account).balance
-					+ bot_data.users.users[&user_id]
-						.organisations
-						.clone()
-						.iter()
-						.map(|x| bot_data.accounts.account(*x).balance)
-						.sum::<u32>()
-			};
+	let users = (&bot_data).users.users.keys().into_iter().map(|x| x.clone()).collect::<Vec<_>>();
+	let mut total_tax = 0;
 
-			let mut total_wealth = origional_wealth;
-			let mut total_tax_collected = 0.;
-			let paid = bot_data
-				.wealth_tax
-				.iter()
-				.map(|&(amount, percent)| {
-					// Amount of tax taken by that band
-					let taxed = amount.min(total_wealth);
-					total_wealth -= taxed;
-					let tax_collected = taxed as f64 * percent / 100.;
-					total_tax_collected += tax_collected;
-					(taxed, percent)
-				})
-				.collect::<Vec<_>>();
-			let tax_rate = total_tax_collected / origional_wealth as f64;
+	for user_id in users {
+		let origional_wealth = {
+			bot_data.accounts.account(bot_data.users.users[&user_id].account).balance
+				+ bot_data.users.users[&user_id]
+					.organisations
+					.clone()
+					.iter()
+					.map(|x| bot_data.accounts.account(*x).balance)
+					.sum::<u32>()
+		};
 
-			let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
+		let mut total_wealth = origional_wealth;
+		let mut total_tax_collected = 0.;
+		let paid = bot_data
+			.wealth_tax
+			.iter()
+			.map(|&(amount, percent)| {
+				// Amount of tax taken by that band
+				let taxed = amount.min(total_wealth);
+				total_wealth -= taxed;
+				let tax_collected = taxed as f64 * percent / 100.;
+				total_tax_collected += tax_collected;
+				(taxed, percent)
+			})
+			.collect::<Vec<_>>();
+		let tax_rate = total_tax_collected / origional_wealth as f64;
 
-			let (next, tax) = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"), tax_rate);
+		let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
+
+		let (next, tax) = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"), tax_rate);
+		result += next;
+		total_tax += tax;
+
+		for org in bot_data.users.users[&user_id].organisations.clone() {
+			if org == 0 {
+				continue;
+			}
+			let (next, tax) = &apply_wealth_tax_account(bot_data, org, None, tax_rate);
 			result += next;
 			total_tax += tax;
-
-			for org in bot_data.users.users[&user_id].organisations.clone() {
-				if org == 0 {
-					continue;
-				}
-				let (next, tax) = &apply_wealth_tax_account(bot_data, org, None, tax_rate);
-				result += next;
-				total_tax += tax;
-			}
-
-			if total_tax > 0 {
-				let description = format!(
-					"Wealth tax has been applied at `{}`.\n\n**Payments**\n```\n{}```",
-					paid.into_iter()
-						.filter(|(cc, _)| *cc != 0)
-						.map(|(a, b)| format!("{}: {:.2}%", format_cheesecoin(a), b))
-						.collect::<Vec<_>>()
-						.join(","),
-					result
-				);
-
-				dm_embed(
-					client,
-					Embed::standard().with_title("Wealth Tax").with_description(description),
-					user_id.clone(),
-				)
-				.await;
-			}
 		}
 
-		bot_data.wealth_taxes.push(total_tax);
-		for (user_id, user) in &mut bot_data.users.users {
-			if user.organisations.contains(&0) {
-				let description = format!("The treasury has collected {} of wealth tax.", format_cheesecoin(total_tax));
-				dm_embed(
-					client,
-					Embed::standard().with_title("Total Wealth Tax").with_description(description),
-					user_id.clone(),
-				)
-				.await;
-				break;
-			}
+		if total_tax > 0 {
+			let description = format!(
+				"Wealth tax has been applied at `{}`.\n\n**Payments**\n```\n{}```",
+				paid.into_iter()
+					.filter(|(cc, _)| *cc != 0)
+					.map(|(a, b)| format!("{}: {:.2}%", format_cheesecoin(a), b))
+					.collect::<Vec<_>>()
+					.join(","),
+				result
+			);
+
+			dm_embed(
+				client,
+				Embed::standard().with_title("Wealth Tax").with_description(description),
+				user_id.clone(),
+			)
+			.await;
 		}
 	}
+
+	bot_data.wealth_taxes.push(total_tax);
+	for (user_id, user) in &mut bot_data.users.users {
+		if user.organisations.contains(&0) {
+			let description = format!("The treasury has collected {} of wealth tax.", format_cheesecoin(total_tax));
+			dm_embed(
+				client,
+				Embed::standard().with_title("Total Wealth Tax").with_description(description),
+				user_id.clone(),
+			)
+			.await;
+			break;
+		}
+	}
+
+	bot_data.save();
 }
 
 async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
@@ -430,7 +424,7 @@ async fn treasury_balance(bot_data: &mut BotData, client: &mut DiscordClient) {
 	}
 	let _ = write!(&mut description, "{:-20} {}\n```", "Treasury Balance:", format_cheesecoin(balance));
 	bot_data.treasury_balances.push(balance);
-	bot_data.changed = true;
+	bot_data.save();
 	let embed = Embed::standard().with_title("Daily Treasury Report").with_description(description);
 
 	ChannelMessage::new()
@@ -457,6 +451,7 @@ async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 /// Runs the bot
 async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
+	bot_data.file_path = path.to_string();
 	let gateway = GatewayMeta::get_gateway_meta(client).await.unwrap();
 	info!("received gateway metadata: {:?}", gateway);
 
@@ -468,7 +463,6 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 	tokio::spawn(read_websocket(read, send_ev.clone()));
 
-	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::SaveFile));
 	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::WealthTax));
 	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::CheckElection));
 
@@ -536,7 +530,6 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 					check_bills(bot_data, client).await;
 				}
 			}
-			MainMessage::SaveFile => save_file(bot_data, path),
 			MainMessage::CheckElection => check_election(bot_data),
 		}
 	}

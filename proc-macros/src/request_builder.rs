@@ -78,11 +78,16 @@ impl RequestBuilderInput {
 
 		let stream = match self.request_method.to_string().as_str() {
 			"GET" => {
+				let return_value = if let Some(return_ty) = &self.return_ty {
+					quote!(#return_ty)
+				} else {
+					quote!(Self)
+				};
 				quote! {
-					#decleration (client: &'a mut DiscordClient, #(#fields: impl std::fmt::Display),*) -> Result<Self, NetError>{
+					#decleration (client: &'a mut DiscordClient, #(#fields: impl std::fmt::Display),*) -> Result<#return_value, NetError>{
 						#endpoint
 						let response = client.request(&endpoint, String::new(), hyper::Method::GET).await?;
-						serde_json::from_str(response).map_err(|e| NetError::DeJson(e))
+						serde_json::from_str(&response).map_err(|e| NetError::DeJson(e, response))
 					}
 				}
 			}
@@ -93,9 +98,9 @@ impl RequestBuilderInput {
 
 				// We automatically return a string if there is no return type
 				let return_stmt = if let Some(return_ty) = &self.return_ty {
-					quote! {serde_json::from_str::<#return_ty>(response).map_err(|e| NetError::DeJson(e))}
+					quote! {serde_json::from_str::<#return_ty>(&response).map_err(|e| NetError::DeJson(e, response.to_string()))}
 				} else {
-					quote! { Ok(response.to_string()) }
+					quote! { Ok(response) }
 				};
 
 				// Handle the above for the function signiture
@@ -109,7 +114,7 @@ impl RequestBuilderInput {
 				quote! {
 					#decleration (&self, client: &'a mut DiscordClient, #(#fields: impl std::fmt::Display),*) -> Result<#return_ty, NetError>{
 						#endpoint
-						let response = client.request(&endpoint, serde_json::to_string(#serialize).map_err(|e|NetError::DeJson(e))?, hyper::Method::#request_name).await?;
+						let response = client.request(&endpoint, serde_json::to_string(#serialize).map_err(|e|NetError::DeJson(e, format!("{:?}", #serialize)))?, hyper::Method::#request_name).await?;
 						#return_stmt
 					}
 				}
