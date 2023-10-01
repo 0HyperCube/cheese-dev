@@ -463,8 +463,8 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 	tokio::spawn(read_websocket(read, send_ev.clone()));
 
-	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::WealthTax));
-	tokio::spawn(dispatch_msg(send_ev.clone(), 60000, MainMessage::CheckElection));
+	tokio::spawn(dispatch_msg(send_ev.clone(), 3 * 60 * 60 * 1000, MainMessage::WealthTax));
+	tokio::spawn(dispatch_msg(send_ev.clone(), 3 * 60 * 60 * 1000, MainMessage::CheckElection));
 
 	while let Some(main_message) = recieve_ev.next().await {
 		match main_message {
