@@ -178,7 +178,7 @@ async fn dispatch_msg(send_ev: Sender<MainMessage>, interval: u64, msg: MainMess
 
 /// Continually tries to reconnect
 async fn run_loop() {
-	let mut client = DiscordClient::new(include_str!("token.txt"));
+	let mut client = DiscordClient::new(include_str!("token.txt").trim());
 
 	// Open file and deserialise the data.
 	let path = "cheese_data.ron";
