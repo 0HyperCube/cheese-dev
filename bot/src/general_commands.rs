@@ -124,7 +124,7 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	cheese_user.last_pay = chrono::Utc::now();
 
 	let recipiant = cheese_user.account;
-	let amount = if is_president { 4. } else { 2. };
+	let amount = 2.; //if is_president { 4. } else { 2. };
 	let (_, recipiant_message) = transact(handler_data, recipiant, TREASURY, amount);
 
 	if let Some(message) = recipiant_message {
