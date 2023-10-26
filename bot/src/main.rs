@@ -1,5 +1,6 @@
 #![feature(int_roundings)]
 #![feature(panic_update_hook)]
+#![feature(map_many_mut)]
 use std::panic;
 
 use chrono::Datelike;
@@ -231,8 +232,8 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 	info!("Applying wealth tax.");
 
 	// Applies welth tax to a specific account returning the log information for the user
-	fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> (String, u32) {
-		let account = bot_data.accounts.account_mut(account);
+	fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> Option<(String, u32)> {
+		let account = bot_data.accounts.account_mut(account)?;
 
 		let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
 		account.balance -= tax;
@@ -244,7 +245,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 			format_cheesecoin(account.balance)
 		);
 		bot_data.treasury_account_mut().balance += tax;
-		(result, tax)
+		Some((result, tax))
 	}
 
 	let users = (&bot_data).users.users.keys().into_iter().map(|x| x.clone()).collect::<Vec<_>>();
@@ -252,12 +253,15 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 	for user_id in users {
 		let origional_wealth = {
-			bot_data.accounts.account(bot_data.users.users[&user_id].account).balance
+			bot_data
+				.accounts
+				.account(bot_data.users.users[&user_id].account)
+				.map_or(0, |account| account.balance)
 				+ bot_data.users.users[&user_id]
 					.organisations
 					.clone()
 					.iter()
-					.map(|x| bot_data.accounts.account(*x).balance)
+					.map(|x| bot_data.accounts.account(*x).map_or(0, |account| account.balance))
 					.sum::<u32>()
 		};
 
@@ -279,17 +283,17 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 		let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
 
-		let (next, tax) = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"), tax_rate);
-		result += next;
-		total_tax += tax;
+		let tax = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"), tax_rate);
+		result += tax.as_ref().map_or(&"", |tax| &tax.0);
+		total_tax += tax.as_ref().map_or(0, |tax| tax.1);
 
 		for org in bot_data.users.users[&user_id].organisations.clone() {
 			if org == 0 {
 				continue;
 			}
-			let (next, tax) = &apply_wealth_tax_account(bot_data, org, None, tax_rate);
-			result += next;
-			total_tax += tax;
+			let tax = &apply_wealth_tax_account(bot_data, org, None, tax_rate);
+			result += tax.as_ref().map_or(&"", |tax| &tax.0);
+			total_tax += tax.as_ref().map_or(0, |tax| tax.1);
 		}
 
 		if total_tax > 0 {
@@ -333,10 +337,15 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 	for (_bill_id, bill) in &bot_data.bills {
 		let mut bill_owner_result = String::new();
 		let mut bill_owner_total = 0;
-		let bill_owner_name = bot_data.accounts.account(bill.owner).name.clone();
+		let Some(bill_owner) = bot_data.accounts.account(bill.owner) else {
+			continue;
+		};
+		let bill_owner_name = bill_owner.name.clone();
 		for &payer in &bill.subscribers {
 			for _payment in 0..((bot_data.last_day - bill.last_pay).div_floor(bill.interval)) {
-				let from = bot_data.accounts.account_mut(payer);
+				let Some(from) = bot_data.accounts.account_mut(payer) else {
+					continue;
+				};
 
 				bill_owner_result += "\n";
 				if from.balance >= bill.amount {
@@ -352,10 +361,12 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 						bill.name
 					);
 
-					let embed = Embed::standard()
-						.with_title(format!("Paid {} for {} bill", format_cheesecoin(bill.amount), bill.name))
-						.with_description(sender_message);
-					dm_embed(client, embed, bot_data.users.account_owner(payer)).await;
+					if let Some(payer) = bot_data.users.account_owner(payer) {
+						let embed = Embed::standard()
+							.with_title(format!("Paid {} for {} bill", format_cheesecoin(bill.amount), bill.name))
+							.with_description(sender_message);
+						dm_embed(client, embed, payer).await;
+					}
 				} else {
 					let _ = write!(bill_owner_result, "{:20} Could not afford the bill", from.name);
 					let sender_message = format!(
@@ -366,14 +377,16 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 						bill.name
 					);
 
-					let embed = Embed::standard()
-						.with_title(format!(
-							"Could not afford {} bill - {} is unpaid",
-							format_cheesecoin(bill.amount),
-							bill.name
-						))
-						.with_description(sender_message);
-					dm_embed(client, embed, bot_data.users.account_owner(payer)).await;
+					if let Some(payer) = bot_data.users.account_owner(payer) {
+						let embed = Embed::standard()
+							.with_title(format!(
+								"Could not afford {} bill - {} is unpaid",
+								format_cheesecoin(bill.amount),
+								bill.name
+							))
+							.with_description(sender_message);
+						dm_embed(client, embed, payer).await;
+					}
 				}
 			}
 		}
@@ -396,8 +409,12 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 						format!("{:20} {}{}", "Account Name", "Charge", bill_owner_result)
 					},
 				));
-			dm_embed(client, embed, bot_data.users.account_owner(bill.owner)).await;
-			bot_data.accounts.account_mut(bill.owner).balance += bill_owner_total;
+			if let Some(recipiant) = bot_data.users.account_owner(bill.owner) {
+				dm_embed(client, embed, recipiant).await;
+			}
+			if let Some(owner) = bot_data.accounts.account_mut(bill.owner) {
+				owner.balance += bill_owner_total;
+			}
 		}
 	}
 
@@ -457,7 +474,9 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 
 	let (send_ev, mut recieve_ev) = async_channel::unbounded();
 
-	let Connection { send_outgoing_message, read } = client.connect_gateway(gateway.url).await;
+	let Some(Connection { send_outgoing_message, read }) = client.connect_gateway(gateway.url).await else {
+		return;
+	};
 
 	let mut sequence_number = None;
 
@@ -515,7 +534,9 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 				if day != bot_data.last_day {
 					if let Some(ping_squad) = bot_data.bills.get(&82) {
 						for &subscriber in &ping_squad.subscribers {
-							let recipient_id = bot_data.users.account_owner(subscriber);
+							let Some(recipient_id) = bot_data.users.account_owner(subscriber) else {
+								continue;
+							};
 							let embed = Embed::standard().with_title("Cheesebot Online").with_description(format!(
 								"Cheesebot is now online. You received this message because you are subscribed to the {} bill.",
 								&ping_squad.name

@@ -78,12 +78,14 @@ pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 	let (payer_message, recipiant_message) = transact(handler_data, recipiant, from, amount);
 
 	if let Some(message) = recipiant_message {
-		dm_embed(
-			handler_data.client,
-			Embed::standard().with_title("Payment").with_description(message),
-			handler_data.bot_data.users.account_owner(recipiant),
-		)
-		.await;
+		if let Some(recipiant) = handler_data.bot_data.users.account_owner(recipiant) {
+			dm_embed(
+				handler_data.client,
+				Embed::standard().with_title("Payment").with_description(message),
+				recipiant,
+			)
+			.await;
+		}
 	}
 
 	respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description(payer_message)).await;
@@ -98,15 +100,15 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	let is_mp = rolls.as_ref().map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
 	let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));
 
-	if !is_mp {
-		let descripition = "You can only claim this benefit if you are an MP (if you are just ask to get the MP roll).";
-		respond_with_embed(
-			handler_data,
-			Embed::standard().with_title("Claim Rollcall").with_description(descripition),
-		)
-		.await;
-		return;
-	}
+	// if !is_mp {
+	// 	let descripition = "You can only claim this benefit if you are an MP (if you are just ask to get the MP roll).";
+	// 	respond_with_embed(
+	// 		handler_data,
+	// 		Embed::standard().with_title("Claim Rollcall").with_description(descripition),
+	// 	)
+	// 	.await;
+	// 	return;
+	// }
 
 	let cheese_user = handler_data.bot_data.users.users.get_mut(&handler_data.user.id).unwrap();
 	if cheese_user.last_pay.num_days_from_ce() == chrono::Utc::now().num_days_from_ce() {

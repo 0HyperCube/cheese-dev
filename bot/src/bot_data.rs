@@ -51,19 +51,21 @@ pub struct Accounts {
 
 impl Accounts {
 	/// Get the account from an account id (either personal or organisation)
-	pub fn account_mut(&mut self, account: AccountId) -> &mut Account {
+	pub fn account_mut(&mut self, account: AccountId) -> Option<&mut Account> {
 		self.personal_accounts
 			.get_mut(&account)
 			.map_or_else(|| self.organisation_accounts.get_mut(&account), |x| Some(x))
-			.unwrap()
 	}
 
 	/// Get the account from an account id (either personal or organisation)
-	pub fn account(&self, account: AccountId) -> &Account {
+	pub fn account(&self, account: AccountId) -> Option<&Account> {
 		self.personal_accounts
 			.get(&account)
 			.map_or_else(|| self.organisation_accounts.get(&account), |x| Some(x))
-			.unwrap()
+	}
+
+	pub fn exists(&self, account: AccountId) -> bool {
+		self.account(account).is_some()
 	}
 }
 #[derive(Debug, Serialize, Deserialize)]
@@ -76,13 +78,11 @@ impl Users {
 		self.users.get_mut(user)
 	}
 	/// Finds the account owner from an account id
-	pub fn account_owner(&self, account: AccountId) -> String {
+	pub fn account_owner(&self, account: AccountId) -> Option<String> {
 		self.users
 			.iter()
 			.find(|(_, user)| user.account == account || user.organisations.contains(&account))
-			.unwrap()
-			.0
-			.clone()
+			.map(|(name, _)| name.clone())
 	}
 }
 
@@ -147,7 +147,23 @@ impl BotData {
 
 	/// Get the cheese user information given a discord user
 	pub fn cheese_user_mut<'a>(&'a mut self, user: &User) -> &'a mut CheeseUser {
-		self.users.users.get_mut(&user.id).unwrap()
+		self.users.users.entry(user.id.clone()).or_insert_with(|| {
+			self.accounts.personal_accounts.insert(
+				self.next_account,
+				Account {
+					name: user.username.clone(),
+					balance: 0,
+					..Default::default()
+				},
+			);
+			self.next_account += 1;
+			CheeseUser {
+				account: self.next_account - 1,
+				last_pay: chrono::DateTime::<chrono::Utc>::MIN_UTC,
+				organisations: Vec::new(),
+				role_id: None,
+			}
+		})
 	}
 
 	/// Get the personal account name from a discord user
@@ -280,7 +296,7 @@ impl BotData {
 			.iter()
 			.copied()
 			.chain([user.account])
-			.map(|account_id| self.accounts.account(account_id))
+			.filter_map(|account_id| self.accounts.account(account_id))
 			.flat_map(|account| account.owned_bills.iter().map(|bill| (bill, account.name.clone())))
 			.filter_map(|(bill_id, account_name)| self.bills.get(&bill_id).map(|bill| (bill, account_name, bill_id)))
 			.map(|(bill, account_name, &bill_id)| (format_bill(bill, account_name), bill_id))
@@ -292,7 +308,7 @@ impl BotData {
 			.iter()
 			.copied()
 			.chain([user.account])
-			.map(|account_id| self.accounts.account(account_id))
+			.filter_map(|account_id| self.accounts.account(account_id))
 			.flat_map(|account| account.subscribed_bills.iter().map(|bill| (bill, account.name.clone())))
 			.filter_map(|(bill_id, account_name)| self.bills.get(&bill_id).map(|bill| (bill, account_name, bill_id)))
 			.map(|(bill, account_name, &bill_id)| (format_bill(bill, account_name), bill_id))
@@ -301,7 +317,7 @@ impl BotData {
 	pub fn bills(&self) -> impl Iterator<Item = (String, BillId)> + '_ {
 		self.bills
 			.iter()
-			.map(|(bill_id, bill)| (bill, self.accounts.account(bill.owner).name.clone(), bill_id))
+			.filter_map(|(bill_id, bill)| self.accounts.account(bill.owner).map(|account| (bill, account.name.clone(), bill_id)))
 			.map(|(bill, account_name, &bill_id)| (format_bill(bill, account_name), bill_id))
 	}
 

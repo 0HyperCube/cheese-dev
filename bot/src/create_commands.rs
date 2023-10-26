@@ -199,7 +199,7 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 		.with_options(
 			ApplicationCommandOption::new()
 				.with_name("rollcall")
-				.with_description("Claim your MP daily rollcall"),
+				.with_description("Claim your daily citizen rollcall"),
 		);
 	let parliament = ApplicationCommand::new()
 		.with_command_type(CommandType::Chat)

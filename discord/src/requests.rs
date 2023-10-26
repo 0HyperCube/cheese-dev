@@ -12,6 +12,7 @@ use hyper_tls::HttpsConnector;
 #[derive(std::fmt::Debug)]
 pub enum NetError {
 	Hyper(hyper::Error),
+	HyperHttp(hyper::http::Error),
 	Utf8(FromUtf8Error),
 	DeJson(serde_json::Error, String),
 }
@@ -42,14 +43,14 @@ impl DiscordClient {
 			.method(&method)
 			.uri(uri)
 			.body(Body::from(body.clone()))
-			.expect("request builder");
+			.map_err(NetError::HyperHttp)?;
 
 		req.headers_mut()
 			.insert(AUTHORIZATION, HeaderValue::from_str(&format!("Bot {}", self.token)).unwrap());
 
 		req.headers_mut().insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
-		let res = self.client.request(req).await.expect("Failed to request");
+		let res = self.client.request(req).await.map_err(NetError::Hyper)?;
 
 		// And then, if the request gets a response...
 		let status = res.status();
@@ -73,7 +74,7 @@ impl DiscordClient {
 	}
 
 	/// Connects the client to the gateway with the current token
-	pub async fn connect_gateway(&self, address: String) -> websocket_handle::Connection {
+	pub async fn connect_gateway(&self, address: String) -> Option<websocket_handle::Connection> {
 		websocket_handle::connect_gateway(address, format!("Bot {}", self.token)).await
 	}
 }

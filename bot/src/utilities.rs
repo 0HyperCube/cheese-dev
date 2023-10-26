@@ -70,26 +70,7 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 		.clone();
 
 	// If the user does not already have an account, create a new one.
-	if !bot_data.users.users.contains_key(&user.id) {
-		bot_data.users.users.insert(
-			user.id.clone(),
-			CheeseUser {
-				account: bot_data.next_account,
-				last_pay: chrono::DateTime::<chrono::Utc>::MIN_UTC,
-				organisations: Vec::new(),
-				role_id: None,
-			},
-		);
-		bot_data.accounts.personal_accounts.insert(
-			bot_data.next_account,
-			Account {
-				name: user.username.clone(),
-				balance: 0,
-				..Default::default()
-			},
-		);
-		bot_data.next_account += 1;
-	}
+	bot_data.cheese_user_mut(&user);
 
 	let mut data = interaction.data.take().unwrap();
 
@@ -146,8 +127,12 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	}
 	// Amount cast into real units
 	let amount = (amount * 100.) as u32;
-
-	let from = handler_data.bot_data.accounts.account_mut(from);
+	if !handler_data.bot_data.accounts.exists(recipiant) {
+		return (format!("To account does not exist"), None);
+	}
+	let Some(from) = handler_data.bot_data.accounts.account_mut(from) else {
+		return (format!("From account does not exist"), None);
+	};
 
 	// Check the account can back the transaction
 	if from.balance < amount {
@@ -156,7 +141,7 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	from.balance -= amount;
 	let payer_name = from.name.clone();
 
-	let recipiant = handler_data.bot_data.accounts.account_mut(recipiant);
+	let recipiant = handler_data.bot_data.accounts.account_mut(recipiant).unwrap();
 	recipiant.balance += amount;
 
 	let reciever_message = format!(

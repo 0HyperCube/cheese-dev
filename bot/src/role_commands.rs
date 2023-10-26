@@ -36,17 +36,21 @@ pub async fn role_assign(handler_data: &mut HandlerData<'_>) {
 		return;
 	};
 
-	let user_account = handler_data.bot_data.accounts.account(user);
-
-	dm_embed(
-		handler_data.client,
-		Embed::standard().with_title("Assign Role Payment").with_description(format!(
-			"Your account recived {} from {} purchasing a new role.",
-			&formatted_price, user_account.name
-		)),
+	if let (Some(user_account), Some(id)) = (
+		handler_data.bot_data.accounts.account(user),
 		handler_data.bot_data.users.account_owner(reciever),
-	)
-	.await;
+	) {
+		dm_embed(
+			handler_data.client,
+			Embed::standard().with_title("Assign Role Payment").with_description(format!(
+				"Your account recived {} from {} purchasing a new role.",
+				&formatted_price, user_account.name
+			)),
+			id,
+		)
+		.await;
+	}
+
 	respond_with_embed(
 		handler_data,
 		Embed::standard()

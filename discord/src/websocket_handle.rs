@@ -16,7 +16,7 @@ pub struct Connection {
 }
 
 /// Connects to the gateway
-pub async fn connect_gateway(address: String, header: String) -> Connection {
+pub async fn connect_gateway(address: String, header: String) -> Option<Connection> {
 	let socket = Url::parse(&(address + "?v=10&encoding=json")).unwrap();
 	info!("Connecting to {}", socket);
 
@@ -25,7 +25,7 @@ pub async fn connect_gateway(address: String, header: String) -> Connection {
 	request.headers_mut().insert(AUTHORIZATION, HeaderValue::from_str(&header).unwrap());
 
 	// Start a websocket stream
-	let (socket, _) = tokio_tungstenite::connect_async(request).await.unwrap();
+	let (socket, _) = tokio_tungstenite::connect_async(request).await.ok()?;
 
 	// Split socket into reader and writer
 	let (write, read) = socket.split();
@@ -35,7 +35,7 @@ pub async fn connect_gateway(address: String, header: String) -> Connection {
 
 	tokio::spawn(outgoing_messages(write, handle_outgoing_message));
 
-	Connection { send_outgoing_message, read }
+	Some(Connection { send_outgoing_message, read })
 }
 
 /// Sends outgoing messages that are received from the async-channel

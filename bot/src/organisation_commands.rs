@@ -12,20 +12,10 @@ pub async fn organisation_create<'a>(handler_data: &mut HandlerData<'a>) {
 		balance: 0,
 		..Default::default()
 	};
+	let account_id = handler_data.bot_data.next_account;
+	handler_data.bot_data.accounts.organisation_accounts.insert(account_id, account);
 
-	handler_data
-		.bot_data
-		.accounts
-		.organisation_accounts
-		.insert(handler_data.bot_data.next_account, account);
-
-	handler_data
-		.bot_data
-		.users
-		.get_mut(&handler_data.user.id)
-		.unwrap()
-		.organisations
-		.push(handler_data.bot_data.next_account);
+	handler_data.bot_data.cheese_user_mut(&handler_data.user).organisations.push(account_id);
 	handler_data.bot_data.next_account += 1;
 
 	let description = format!(
@@ -66,27 +56,26 @@ pub async fn organisation_transfer<'a>(handler_data: &mut HandlerData<'a>) {
 	{
 		Some(x) => x,
 		None => {
-			respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description("Invalid owner")).await;
+			respond_with_embed(handler_data, Embed::standard().with_title("Transfer").with_description("Invalid owner")).await;
 			return;
 		}
 	};
 
-	handler_data
+	let Some((_, owner_user)) = handler_data
 		.bot_data
 		.users
 		.users
 		.iter_mut()
 		.find(|(_, user)| user.account == owner_account)
-		.unwrap()
-		.1
-		.organisations
-		.push(organisation);
+	else {
+		respond_with_embed(handler_data, Embed::standard().with_title("Transfer").with_description("Invalid owner")).await;
+		return;
+	};
+	owner_user.organisations.push(organisation);
 
 	handler_data
 		.bot_data
-		.users
-		.get_mut(&handler_data.user.id)
-		.unwrap()
+		.cheese_user_mut(&handler_data.user)
 		.organisations
 		.retain(|o| o != &organisation);
 
@@ -120,12 +109,17 @@ pub async fn organisation_rename<'a>(handler_data: &mut HandlerData<'a>) {
 
 	let org_name = handler_data.options["new"].as_str();
 
-	let description = format!(
-		"Renamed {} to {}",
-		handler_data.bot_data.accounts.organisation_accounts[&organisation].name, org_name
-	);
+	let Some(organisation) = handler_data.bot_data.accounts.organisation_accounts.get_mut(&organisation) else {
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Rename").with_description("Invalid organisation name"),
+		)
+		.await;
+		return;
+	};
+	let description = format!("Renamed {} to {}", organisation.name, org_name);
 
-	handler_data.bot_data.accounts.organisation_accounts.get_mut(&organisation).unwrap().name = org_name;
+	organisation.name = org_name;
 
 	respond_with_embed(
 		handler_data,
@@ -148,14 +142,33 @@ pub async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 			return;
 		}
 	};
+	if !handler_data.bot_data.accounts.organisation_accounts.contains_key(&organisation) {
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Deletion").with_description("Invalid organisation name"),
+		)
+		.await;
+		return;
+	}
 
 	let description = format!("Deleted {}", handler_data.bot_data.accounts.organisation_accounts[&organisation].name);
 
-	handler_data
+	let organisation_balance = handler_data.bot_data.accounts.organisation_accounts[&organisation].balance;
+
+	let Some(recipiant) = handler_data
 		.bot_data
 		.accounts
 		.account_mut(handler_data.bot_data.cheese_user(&handler_data.user).account)
-		.balance += handler_data.bot_data.accounts.organisation_accounts[&organisation].balance;
+	else {
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Deletion").with_description("Invalid organisation name"),
+		)
+		.await;
+		return;
+	};
+
+	recipiant.balance += organisation_balance;
 
 	handler_data
 		.bot_data
