@@ -183,6 +183,7 @@ async fn run_loop() {
 
 	// Open file and deserialise the data.
 	let path = "cheese_data.ron";
+	std::fs::copy(path, format!("cheese_data_back_{}.ron", chrono::Utc::now().num_days_from_ce())).unwrap();
 	let mut bot_data = std::fs::read_to_string(path).map_or(BotData::default(), |v| match ron::from_str(&v) {
 		Err(e) => {
 			error!("Decoding ron {:?}", e);
