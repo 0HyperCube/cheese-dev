@@ -22,16 +22,18 @@ pub async fn respond_with_embed<'a>(handler_data: &mut HandlerData<'a>, embed: E
 }
 
 /// Utility function for dming a discord user a message
-pub async fn dm_message<'a>(client: &mut DiscordClient, message: ChannelMessage, recipient_id: String) {
+pub async fn dm_message<'a>(client: &mut DiscordClient, message: ChannelMessage, recipient_id: String) -> Result<(), NetError> {
 	// We first create the channel (does nothing if it already exists)
-	let channel = CreateDM { recipient_id }.post_create(client).await.unwrap();
+	let channel = CreateDM { recipient_id }.post_create(client).await?;
 
 	// Then we can send the message in the channel
-	message.post_create(client, channel.id).await.unwrap();
+	message.post_create(client, channel.id).await?;
+
+	Ok(())
 }
 
 /// Utility function for dming a discord user an embed
-pub async fn dm_embed<'a>(client: &mut DiscordClient, embed: Embed, recipient_id: String) {
+pub async fn dm_embed<'a>(client: &mut DiscordClient, embed: Embed, recipient_id: String) -> Result<(), NetError> {
 	dm_message(client, ChannelMessage::new().with_embeds(embed), recipient_id).await
 }
 

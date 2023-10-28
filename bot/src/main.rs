@@ -307,12 +307,15 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 				result
 			);
 
-			dm_embed(
+			if let Err(e) = dm_embed(
 				client,
 				Embed::standard().with_title("Wealth Tax").with_description(description),
 				user_id.clone(),
 			)
-			.await;
+			.await
+			{
+				error!("Failed to dm {user_id} about their wealth tax: {e:?}.")
+			}
 		}
 	}
 
@@ -320,12 +323,15 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 	for (user_id, user) in &mut bot_data.users.users {
 		if user.organisations.contains(&0) {
 			let description = format!("The treasury has collected {} of wealth tax.", format_cheesecoin(total_tax));
-			dm_embed(
+			if let Err(e) = dm_embed(
 				client,
 				Embed::standard().with_title("Total Wealth Tax").with_description(description),
 				user_id.clone(),
 			)
-			.await;
+			.await
+			{
+				error!("Failed to message treasury owner {user_id} about the collected wealth tax: {e:?}");
+			};
 			break;
 		}
 	}
@@ -365,7 +371,9 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 						let embed = Embed::standard()
 							.with_title(format!("Paid {} for {} bill", format_cheesecoin(bill.amount), bill.name))
 							.with_description(sender_message);
-						dm_embed(client, embed, payer).await;
+						if let Err(e) = dm_embed(client, embed, payer.clone()).await {
+							error!("Failed to dm bill payer {payer} about payment: {e:?}");
+						}
 					}
 				} else {
 					let _ = write!(bill_owner_result, "{:20} Could not afford the bill", from.name);
@@ -385,7 +393,9 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 								bill.name
 							))
 							.with_description(sender_message);
-						dm_embed(client, embed, payer).await;
+						if let Err(e) = dm_embed(client, embed, payer.clone()).await {
+							error!("Failed to send failiure to transfer message to {payer}: {e:?}");
+						}
 					}
 				}
 			}
@@ -410,7 +420,9 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 					},
 				));
 			if let Some(recipiant) = bot_data.users.account_owner(bill.owner) {
-				dm_embed(client, embed, recipiant).await;
+				if let Err(e) = dm_embed(client, embed, recipiant.clone()).await {
+					error!("Failed to send collected bill to {recipiant} error: {e:?}");
+				}
 			}
 			if let Some(owner) = bot_data.accounts.account_mut(bill.owner) {
 				owner.balance += bill_owner_total;
@@ -455,14 +467,18 @@ async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
 	let embed = Embed::standard()
 						.with_title(format!("Hangman in Rust due in {days} days!"))
 						.with_description(format!("Dear Twaddle,\n\nI write to you today to inform you of an approaching deadline that it would be wise not to miss. The program which you yourself have willingly resolved to craft, Hangman in Rust, is due in **{days} days**. Whilst this deadline has the possibility of being percieved as tyranical, relentless and inhumane, I can, in all confidence, assure you that it will be exceptionally benificial to you and all of those around you.\n\nYou have long wanted to learn a low level systems programming language, and have spoken of pursuing a path involving scholarship in Rust for an imoderate period of time. Completing something like this will increase your motivation and perseverance as well as your attention span, which is vital to getting hired at the cheesecake factory which I percieve is your life aim.\n\nBest wishes,\nCheese Bot."));
-	dm_embed(client, embed, "762325231925854231".to_string()).await;
+	if let Err(e) = dm_embed(client, embed, "762325231925854231".to_string()).await {
+		error!("Twaddle :( {e:?}");
+	}
 
 	for images in [
 		"https://i1.wp.com/www.pcfruit.com/wp-content/uploads/2017/04/20370.jpg?fit=4256%2C2832&ssl=1",
 		"https://sherwoodphoenix.co.uk/wp-content/uploads/2016/04/Yamaha-C6-Boudoir-Grand-Piano-Black-Polyester-At-Sherwood-Phoenix-Pianos-1.jpg",
 	] {
 		let message = ChannelMessage::new().with_content(images);
-		dm_message(client, message, "762325231925854231".to_string()).await;
+		if let Err(e) = dm_message(client, message, "762325231925854231".to_string()).await {
+			error!("Twaddle :( {e:?}");
+		}
 	}
 }
 
@@ -541,7 +557,9 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 								"Cheesebot is now online. You received this message because you are subscribed to the {} bill.",
 								&ping_squad.name
 							));
-							dm_embed(client, embed, recipient_id).await;
+							if let Err(e) = dm_embed(client, embed, recipient_id).await {
+								error!("Failed to notify of cb online {e:?}");
+							}
 						}
 					}
 

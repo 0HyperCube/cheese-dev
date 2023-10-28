@@ -141,8 +141,8 @@ pub async fn bill_subscribe(handler_data: &mut HandlerData<'_>) {
 		return;
 	};
 	bill.subscribers.push(from);
-	let owner = bot_data.accounts.account(bill.owner).map(|owner| owner.name.clone());
-	let bill_owner = format_bill(bill, owner.clone().unwrap_or_else(|| "No owner".to_string()));
+	let account_name = bot_data.accounts.account(bill.owner).map(|owner| owner.name.clone());
+	let bill_owner = format_bill(bill, account_name.clone().unwrap_or_else(|| "void".to_string()));
 	let Some(from_account) = bot_data.accounts.account_mut(from) else {
 		respond_with_embed(
 			handler_data,
@@ -154,15 +154,18 @@ pub async fn bill_subscribe(handler_data: &mut HandlerData<'_>) {
 	from_account.subscribed_bills.push(bill_id);
 	let description = format!("Subscribed to {} from account {}", bill_owner, from_account.name);
 
-	if let Some(owner) = owner {
-		dm_embed(
+	if let Some(owner) = bot_data.users.account_owner(bill.owner) {
+		if let Err(e) = dm_embed(
 			handler_data.client,
 			Embed::standard()
 				.with_title("New subscriber")
 				.with_description(format!("{} subscribed to your bill {}", from_account.name, bill_owner)),
-			owner,
+			owner.clone(),
 		)
-		.await;
+		.await
+		{
+			error!("Failed to notify new sub {owner} {e:?}");
+		}
 	}
 
 	respond_with_embed(
@@ -212,19 +215,22 @@ pub async fn bill_unsubscribe(handler_data: &mut HandlerData<'_>) {
 	};
 	bill.subscribers.retain(|account| !user_owned_accounts.contains(account));
 
-	let owner = bot_data.accounts.account(bill.owner).map(|owner| owner.name.clone());
-	let bill_owner = format_bill(bill, owner.clone().unwrap_or_else(|| "No owner".to_string()));
-	let description = format!("Unsubscribed to {} ", bill_owner);
+	let account_name = bot_data.accounts.account(bill.owner).map(|owner| owner.name.clone());
+	let bill_name = format_bill(bill, account_name.clone().unwrap_or_else(|| "void".to_string()));
+	let description = format!("Unsubscribed to {} ", bill_name);
 
-	if let Some(owner) = owner {
-		dm_embed(
+	if let Some(owner) = bot_data.users.account_owner(bill.owner) {
+		if let Err(e) = dm_embed(
 			handler_data.client,
 			Embed::standard()
 				.with_title("Lost subscriber")
-				.with_description(format!("{} unsubscribed to your bill {}", username, bill_owner)),
-			owner,
+				.with_description(format!("{} unsubscribed to your bill {}", username, bill_name)),
+			owner.clone(),
 		)
-		.await;
+		.await
+		{
+			error!("Failed to notify {owner} of unsub {e:?}");
+		}
 	}
 
 	respond_with_embed(
