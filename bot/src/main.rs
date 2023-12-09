@@ -262,6 +262,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 					.organisations
 					.clone()
 					.iter()
+					.filter(|&&account| account != TREASURY)
 					.map(|x| bot_data.accounts.account(*x).map_or(0, |account| account.balance))
 					.sum::<u32>()
 		};
