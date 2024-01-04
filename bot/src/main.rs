@@ -219,7 +219,7 @@ fn check_election(bot_data: &mut BotData) {
 		return;
 	}
 	votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
-	bot_data.president = vontes[0].0;
+	bot_data.president = votes[0].0.to_string();
 	for (user_id, votes) in votes {
 		let cheese_user = bot_data.users.get_mut(user_id).unwrap();
 		let name = &bot_data.accounts.personal_accounts[&cheese_user.account].name;
