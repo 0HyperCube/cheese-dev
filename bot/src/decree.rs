@@ -18,9 +18,9 @@ pub async fn decree(handler_data: &mut HandlerData<'_>) {
 
 	let n = handler_data.bot_data.decree;
 	let title = title.map_or_else(|| format!("Untitled decree #{n}"), |t| format!("Decree #{n} - {t}"));
-	let embed = Embed::standard().with_title(title).with_description(description.unwrap_or_default());
+	let embed = Embed::standard().with_title(&title).with_description(description.unwrap_or_default());
 
-	let client = handler_data.client;
+	let client = &mut handler_data.client;
 	if let Err(e) = ChannelMessage::new().with_embeds(embed).post_create(client, "1128432799964217374").await {
 		error!("Failed to issue decree {e:?}");
 		respond_with_embed(
