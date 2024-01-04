@@ -116,7 +116,7 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 			"You can claim this benefit only once per day. You have last claimed it {} hours ago.",
 			(chrono::Utc::now() - cheese_user.last_pay).num_hours()
 		);
-		respond_with_embed(
+		respond_with_disappear_embed(
 			handler_data,
 			Embed::standard().with_title("Claim Rollcall").with_description(descripition),
 		)
@@ -130,7 +130,7 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	let (_, recipiant_message) = transact(handler_data, recipiant, TREASURY, amount);
 
 	if let Some(message) = recipiant_message {
-		respond_with_embed(handler_data, Embed::standard().with_title("Claim Rollcall").with_description(message)).await;
+		respond_with_disappear_embed(handler_data, Embed::standard().with_title("Claim Rollcall").with_description(message)).await;
 	} else {
 		respond_with_embed(
 			handler_data,
