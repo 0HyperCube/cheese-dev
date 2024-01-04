@@ -221,18 +221,18 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 			ApplicationCommandOption::new()
 				.with_name("vote")
 				.with_description("Vote for a candidate (or change your vote)."),
-		)
-		.with_options(
-			ApplicationCommandOption::new()
-				.with_option_type(CommandOptionType::SubCommandGroup)
-				.with_name("view")
-				.with_description("View something.")
-				.with_options(
-					ApplicationCommandOption::new()
-						.with_name("results")
-						.with_description("View results of last election."),
-				),
 		);
+	// .with_options(
+	// 	ApplicationCommandOption::new()
+	// 		.with_option_type(CommandOptionType::SubCommandGroup)
+	// 		.with_name("view")
+	// 		.with_description("View something.")
+	// 		.with_options(
+	// 			ApplicationCommandOption::new()
+	// 				.with_name("results")
+	// 				.with_description("View results of last election."),
+	// 		),
+	// )
 
 	let role = ApplicationCommand::new()
 		.with_command_type(CommandType::Chat)
@@ -264,6 +264,23 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 						.with_required(true),
 				),
 		);
+	let decree = ApplicationCommand::new()
+		.with_name("decree")
+		.with_description("Decree (si tu es président)")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::String)
+				.with_name("title")
+				.with_description("Title of decree")
+				.with_required(true),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::String)
+				.with_name("description")
+				.with_description("Description of decree")
+				.with_required(true),
+		);
 	ApplicationCommandList::new()
 		.with_commands(about)
 		.with_commands(balances)
@@ -273,6 +290,7 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 		.with_commands(organisation)
 		.with_commands(parliament)
 		.with_commands(role)
+		.with_commands(decree)
 		.put_bulk_override_global(client, application_id)
 		.await
 		.unwrap();

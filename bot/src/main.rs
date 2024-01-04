@@ -16,6 +16,7 @@ mod utilities;
 pub use utilities::*;
 
 mod bill_commands;
+mod decree;
 mod general_commands;
 mod organisation_commands;
 mod parliament_commands;
@@ -71,6 +72,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"bill unsubscribe" => bill_commands::bill_unsubscribe(&mut handler_data).await,
 				"bill view" => bill_commands::bill_view(&mut handler_data).await,
 				"role assign" => role_commands::role_assign(&mut handler_data).await,
+				"decree" => decree::decree(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
 		}
@@ -202,9 +204,8 @@ fn check_election(bot_data: &mut BotData) {
 	let days_since = ((chrono::Utc::now() - bot_data.previous_time).num_hours()) / 24;
 	let days_from_sunday = chrono::Utc::now().weekday().num_days_from_sunday();
 
-	if  chrono::Utc::now().num_days_from_ce() == bot_data.previous_time.num_days_from_ce()
-		 || (((days_from_sunday > 2 && days_from_sunday != 6) || days_since < 4)
-		&& chrono::Utc::now().num_days_from_ce() != 738838)
+	if chrono::Utc::now().num_days_from_ce() == bot_data.previous_time.num_days_from_ce()
+		|| (((days_from_sunday > 2 && days_from_sunday != 6) || days_since < 4) && chrono::Utc::now().num_days_from_ce() != 738838)
 	{
 		return;
 	}
@@ -212,7 +213,13 @@ fn check_election(bot_data: &mut BotData) {
 	bot_data.previous_results = String::new();
 
 	let mut votes = bot_data.election.iter().collect::<Vec<_>>();
+	if votes.is_empty() {
+		warn!("Empty election");
+		bot_data.save();
+		return;
+	}
 	votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
+	bot_data.president = vontes[0].0;
 	for (user_id, votes) in votes {
 		let cheese_user = bot_data.users.get_mut(user_id).unwrap();
 		let name = &bot_data.accounts.personal_accounts[&cheese_user.account].name;
@@ -461,18 +468,20 @@ async fn treasury_balance(bot_data: &mut BotData, client: &mut DiscordClient) {
 	bot_data.save();
 	let embed = Embed::standard().with_title("Daily Treasury Report").with_description(description);
 
-	ChannelMessage::new()
-		.with_embeds(embed)
-		.post_create(client, "1018447658685321266")
-		.await
-		.unwrap();
+	if let Err(e) = ChannelMessage::new().with_embeds(embed).post_create(client, "1018447658685321266").await {
+		error!("Failed to post treasury balance {e:?}");
+	};
+}
+
+fn twaddle_id() -> String {
+	"762325231925854231".to_string()
 }
 async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
 	let days = 738435 - bot_data.last_day;
 	let embed = Embed::standard()
 						.with_title(format!("Hangman in Rust due in {days} days!"))
 						.with_description(format!("Dear Twaddle,\n\nI write to you today to inform you of an approaching deadline that it would be wise not to miss. The program which you yourself have willingly resolved to craft, Hangman in Rust, is due in **{days} days**. Whilst this deadline has the possibility of being percieved as tyranical, relentless and inhumane, I can, in all confidence, assure you that it will be exceptionally benificial to you and all of those around you.\n\nYou have long wanted to learn a low level systems programming language, and have spoken of pursuing a path involving scholarship in Rust for an imoderate period of time. Completing something like this will increase your motivation and perseverance as well as your attention span, which is vital to getting hired at the cheesecake factory which I percieve is your life aim.\n\nBest wishes,\nCheese Bot."));
-	if let Err(e) = dm_embed(client, embed, "762325231925854231".to_string()).await {
+	if let Err(e) = dm_embed(client, embed, twaddle_id()).await {
 		error!("Twaddle :( {e:?}");
 	}
 
@@ -481,7 +490,7 @@ async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
 		"https://sherwoodphoenix.co.uk/wp-content/uploads/2016/04/Yamaha-C6-Boudoir-Grand-Piano-Black-Polyester-At-Sherwood-Phoenix-Pianos-1.jpg",
 	] {
 		let message = ChannelMessage::new().with_content(images);
-		if let Err(e) = dm_message(client, message, "762325231925854231".to_string()).await {
+		if let Err(e) = dm_message(client, message, twaddle_id()).await {
 			error!("Twaddle :( {e:?}");
 		}
 	}
