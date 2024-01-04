@@ -4,7 +4,7 @@ use discord::hyper::Method;
 use discord::*;
 pub async fn decree(handler_data: &mut HandlerData<'_>) {
 	if handler_data.user.id != handler_data.bot_data.president {
-		respond_with_embed(
+		respond_with_disappear_embed(
 			handler_data,
 			Embed::standard()
 				.with_title("Cannot decree")
@@ -23,14 +23,14 @@ pub async fn decree(handler_data: &mut HandlerData<'_>) {
 	let client = &mut handler_data.client;
 	if let Err(e) = ChannelMessage::new().with_embeds(embed).post_create(client, "1128432799964217374").await {
 		error!("Failed to issue decree {e:?}");
-		respond_with_embed(
+		respond_with_disappear_embed(
 			handler_data,
 			Embed::standard().with_title("Failed to issue decree").with_description(format!("{e:?}")),
 		)
 		.await;
 		return;
 	}
-	respond_with_embed(
+	respond_with_disappear_embed(
 		handler_data,
 		Embed::standard()
 			.with_title("Decree issued")

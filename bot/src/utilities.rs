@@ -21,6 +21,10 @@ pub async fn respond_with_embed<'a>(handler_data: &mut HandlerData<'a>, embed: E
 	respond_with_message(handler_data, ChannelMessage::new().with_embeds(embed)).await;
 }
 
+pub async fn respond_with_disappear_embed<'a>(handler_data: &mut HandlerData<'a>, embed: Embed) {
+	respond_with_message(handler_data, ChannelMessage::new().with_embeds(embed).with_flags(1_u32 << 6)).await;
+}
+
 /// Utility function for dming a discord user a message
 pub async fn dm_message<'a>(client: &mut DiscordClient, message: ChannelMessage, recipient_id: String) -> Result<(), NetError> {
 	// We first create the channel (does nothing if it already exists)
