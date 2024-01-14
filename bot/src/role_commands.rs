@@ -40,7 +40,7 @@ pub async fn role_assign(handler_data: &mut HandlerData<'_>) {
 		handler_data.bot_data.accounts.account(user),
 		handler_data.bot_data.users.account_owner(reciever),
 	) {
-		dm_embed(
+		if let Err(e) = dm_embed(
 			handler_data.client,
 			Embed::standard().with_title("Assign Role Payment").with_description(format!(
 				"Your account recived {} from {} purchasing a new role.",
@@ -48,7 +48,10 @@ pub async fn role_assign(handler_data: &mut HandlerData<'_>) {
 			)),
 			id,
 		)
-		.await;
+		.await
+		{
+			warn!("Failed to dm role {e:?}");
+		}
 	}
 
 	respond_with_embed(

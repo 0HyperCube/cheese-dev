@@ -1,6 +1,7 @@
 use chrono::{Datelike, Duration};
 
 use crate::bot_data::*;
+use crate::general_commands::STAR_ROLE;
 use crate::utilities::*;
 use discord::*;
 
@@ -66,6 +67,40 @@ pub async fn view_results<'a>(handler_data: &mut HandlerData<'a>) {
 		Embed::standard().with_title("Election results").with_description(description),
 	)
 	.await;
+}
+pub async fn count_results<'a>(handler_data: &mut HandlerData<'a>) {
+	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
+	let is_valid = rolls.as_ref().map_or(false, |user| user.roles.contains(&STAR_ROLE.to_string()));
+
+	if !is_valid {
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Count results").with_description("Incorrect rolly poly"),
+		)
+		.await;
+		return;
+	}
+
+	let mut votes = handler_data.bot_data.election.iter().collect::<Vec<_>>();
+	if votes.is_empty() {
+		respond_with_embed(handler_data, Embed::standard().with_title("Count results").with_description("Empty")).await;
+		handler_data.bot_data.save();
+		return;
+	}
+	votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
+	for (user_id, votes) in votes {
+		let cheese_user = handler_data.bot_data.users.get_mut(user_id).unwrap();
+		let name = &handler_data.bot_data.accounts.personal_accounts[&cheese_user.account].name;
+		handler_data.bot_data.previous_results += name;
+		handler_data.bot_data.previous_results += ", ";
+		handler_data.bot_data.previous_results += &votes.len().to_string();
+		handler_data.bot_data.previous_results += "\n";
+	}
+	for (_, votes) in handler_data.bot_data.election.iter_mut() {
+		*votes = Vec::new();
+	}
+
+	respond_with_embed(handler_data, Embed::standard().with_title("Count results").with_description("success!")).await;
 }
 
 pub async fn cast_vote<'a>(handler_data: &mut HandlerData<'a>, new_candidate: &str) {

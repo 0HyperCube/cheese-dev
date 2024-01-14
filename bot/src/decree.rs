@@ -1,9 +1,11 @@
 use crate::bot_data::*;
+use crate::general_commands::PRESIDENT_ROLL;
 use crate::utilities::*;
-use discord::hyper::Method;
 use discord::*;
 pub async fn decree(handler_data: &mut HandlerData<'_>) {
-	if handler_data.user.id != handler_data.bot_data.president {
+	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
+	let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));
+	if !is_president {
 		respond_with_disappear_embed(
 			handler_data,
 			Embed::standard()

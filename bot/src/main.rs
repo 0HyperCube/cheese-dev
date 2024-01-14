@@ -66,6 +66,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"parliament stop running" => parliament_commands::set_running(&mut handler_data, false).await,
 				"parliament vote" => parliament_commands::vote(&mut handler_data).await,
 				"parliament view results" => parliament_commands::view_results(&mut handler_data).await,
+				"parliament count results" => parliament_commands::count_results(&mut handler_data).await,
 				"bill create" => bill_commands::create_bill(&mut handler_data).await,
 				"bill delete" => bill_commands::bill_delete(&mut handler_data).await,
 				"bill subscribe" => bill_commands::bill_subscribe(&mut handler_data).await,
@@ -219,7 +220,6 @@ fn check_election(bot_data: &mut BotData) {
 		return;
 	}
 	votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
-	bot_data.president = votes[0].0.to_string();
 	for (user_id, votes) in votes {
 		let cheese_user = bot_data.users.get_mut(user_id).unwrap();
 		let name = &bot_data.accounts.personal_accounts[&cheese_user.account].name;

@@ -232,6 +232,17 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 						.with_name("results")
 						.with_description("View results of last election."),
 				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::SubCommandGroup)
+				.with_name("count")
+				.with_description("Count something.")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_name("results")
+						.with_description("Count results of last election."),
+				),
 		);
 
 	let role = ApplicationCommand::new()

@@ -5,7 +5,7 @@ use discord::*;
 use serde::{Deserialize, Serialize};
 pub use std::fmt::Write;
 
-use crate::{format_bill, twaddle_id};
+use crate::format_bill;
 
 pub type AccountId = u64;
 pub const TREASURY: AccountId = 0;
@@ -105,8 +105,6 @@ pub struct BotData {
 	pub previous_results: String,
 	#[serde(skip)]
 	pub file_path: String,
-	#[serde(default = "twaddle_id")]
-	pub president: String,
 	#[serde(default)]
 	pub decree: u32,
 }
@@ -139,7 +137,6 @@ impl Default for BotData {
 			previous_time: chrono::Utc::now(),
 			previous_results: "No previous results".into(),
 			file_path: String::new(),
-			president: twaddle_id(),
 			decree: 0,
 		}
 	}

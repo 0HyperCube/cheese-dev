@@ -2,7 +2,9 @@ use crate::bot_data::*;
 use crate::utilities::*;
 use chrono::Datelike;
 use discord::*;
-
+//pub const MP_ROLL: &str = "985804444237172797";
+pub const STAR_ROLE: &str = "1171114445288779916";
+pub const PRESIDENT_ROLL: &str = "907660552938061834";
 /// Handles the `/about` command
 pub async fn about<'a>(handler_data: &mut HandlerData<'a>) {
 	respond_with_embed(
@@ -79,12 +81,15 @@ pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 
 	if let Some(message) = recipiant_message {
 		if let Some(recipiant) = handler_data.bot_data.users.account_owner(recipiant) {
-			dm_embed(
+			if let Err(e) = dm_embed(
 				handler_data.client,
 				Embed::standard().with_title("Payment").with_description(message),
 				recipiant,
 			)
-			.await;
+			.await
+			{
+				warn!("Payment dm failed {e:?}");
+			}
 		}
 	}
 
@@ -93,12 +98,9 @@ pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 
 /// Handles the `/claim rollcall` command
 pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
-	const MP_ROLL: &str = "985804444237172797";
-	const PRESIDENT_ROLL: &str = "907660552938061834";
-
-	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
-	let is_mp = rolls.as_ref().map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
-	let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));
+	//let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
+	// let is_mp = rolls.as_ref().map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
+	// let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));
 
 	// if !is_mp {
 	// 	let descripition = "You can only claim this benefit if you are an MP (if you are just ask to get the MP roll).";
