@@ -88,6 +88,7 @@ pub async fn count_results<'a>(handler_data: &mut HandlerData<'a>) {
 		return;
 	}
 	votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
+	handler_data.bot_data.previous_results += "\n--- Runoff Election ---\n\n";
 	for (user_id, votes) in votes {
 		let cheese_user = handler_data.bot_data.users.get_mut(user_id).unwrap();
 		let name = &handler_data.bot_data.accounts.personal_accounts[&cheese_user.account].name;
