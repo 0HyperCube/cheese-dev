@@ -1,43 +1,21 @@
 (
 	users: (
 		users: {
-			"677571708156117012": (
-				account: 102,
-				last_pay: "-262144-01-01T00:00:00Z",
-				organisations: [],
-			),
 			"888167676512440352": (
 				account: 888167676512440352,
 				last_pay: "2022-03-03T17:46:43.140132233Z",
 				organisations: [],
 			),
-			"753650103096442960": (
-				account: 86,
-				last_pay: "2023-09-25T19:49:34.116542763Z",
+			"1068971424292814909": (
+				account: 79,
+				last_pay: "2024-03-01T07:55:13.649633512Z",
 				organisations: [],
+				role_id: Some("1160250931284287620"),
 			),
-			"723106960035020811": (
-				account: 97,
-				last_pay: "2023-10-22T19:31:45.364320848Z",
+			"758042322364792974": (
+				account: 24,
+				last_pay: "2024-02-07T20:35:32.135564912Z",
 				organisations: [],
-			),
-			"788516359205027841": (
-				account: 100,
-				last_pay: "2024-01-14T09:10:08.881490415Z",
-				organisations: [],
-			),
-			"887020108696920116": (
-				account: 887020108696920116,
-				last_pay: "2024-01-04T18:27:03.469264630Z",
-				organisations: [
-					0,
-					7,
-					11,
-					18,
-					69,
-					94,
-				],
-				role_id: Some("1152272725553983569"),
 			),
 			"653127445922316299": (
 				account: 653127445922316299,
@@ -48,9 +26,57 @@
 					66,
 				],
 			),
-			"847915088547807273": (
-				account: 89,
-				last_pay: "2023-11-11T21:07:25.267496317Z",
+			"709767987242074116": (
+				account: 709767987242074116,
+				last_pay: "2024-03-01T16:28:35.319436615Z",
+				organisations: [],
+			),
+			"689943656958132333": (
+				account: 104,
+				last_pay: "-262144-01-01T00:00:00Z",
+				organisations: [],
+			),
+			"737928480389333004": (
+				account: 737928480389333004,
+				last_pay: "2024-02-20T17:29:29.511377010Z",
+				organisations: [],
+				role_id: Some("1152541735872892989"),
+			),
+			"722468356711776269": (
+				account: 722468356711776269,
+				last_pay: "2024-01-27T07:28:00.077915713Z",
+				organisations: [
+					3,
+					19,
+				],
+				role_id: Some("1160136725155299388"),
+			),
+			"825146795423694878": (
+				account: 88,
+				last_pay: "2023-07-13T16:02:17.870425676Z",
+				organisations: [],
+			),
+			"887020108696920116": (
+				account: 887020108696920116,
+				last_pay: "2024-03-01T19:55:43.081497397Z",
+				organisations: [
+					0,
+					7,
+					11,
+					18,
+					69,
+					94,
+				],
+				role_id: Some("1152272725553983569"),
+			),
+			"825304836894883840": (
+				account: 80,
+				last_pay: "-262144-01-01T00:00:00Z",
+				organisations: [],
+			),
+			"677571708156117012": (
+				account: 102,
+				last_pay: "-262144-01-01T00:00:00Z",
 				organisations: [],
 			),
 			"698103473627070474": (
@@ -58,53 +84,50 @@
 				last_pay: "-262144-01-01T00:00:00Z",
 				organisations: [],
 			),
-			"825146795423694878": (
-				account: 88,
-				last_pay: "2023-07-13T16:02:17.870425676Z",
-				organisations: [],
-			),
-			"737928480389333004": (
-				account: 737928480389333004,
-				last_pay: "2024-01-09T20:04:48.381829167Z",
-				organisations: [],
-				role_id: Some("1152541735872892989"),
-			),
-			"1068971424292814909": (
-				account: 79,
-				last_pay: "2024-01-13T11:46:44.558405142Z",
-				organisations: [],
-				role_id: Some("1160250931284287620"),
-			),
-			"709767987242074116": (
-				account: 709767987242074116,
-				last_pay: "2024-01-13T10:31:58.088278022Z",
-				organisations: [],
-			),
-			"722468356711776269": (
-				account: 722468356711776269,
-				last_pay: "2024-01-13T10:33:12.459604034Z",
+			"1087428990547009556": (
+				account: 76,
+				last_pay: "2024-02-28T18:07:25.231338053Z",
 				organisations: [
-					3,
-					19,
+					109,
 				],
-				role_id: Some("1160136725155299388"),
 			),
-			"689943656958132333": (
-				account: 104,
-				last_pay: "-262144-01-01T00:00:00Z",
+			"764206694841974795": (
+				account: 68,
+				last_pay: "2024-03-01T19:51:05.244312362Z",
 				organisations: [],
+			),
+			"788516359205027841": (
+				account: 100,
+				last_pay: "2024-02-27T19:18:53.201081182Z",
+				organisations: [],
+			),
+			"762325231925854231": (
+				account: 64,
+				last_pay: "2024-01-22T22:01:00.648382563Z",
+				organisations: [
+					12,
+				],
 			),
 			"1150815316050452530": (
 				account: 98,
-				last_pay: "2023-12-16T08:54:39.933804983Z",
+				last_pay: "2024-03-01T19:59:21.123253532Z",
 				organisations: [],
 				role_id: Some("1160138145958998026"),
 			),
+			"847915088547807273": (
+				account: 89,
+				last_pay: "2024-02-06T08:20:39.448140124Z",
+				organisations: [],
+			),
+			"753650103096442960": (
+				account: 86,
+				last_pay: "2023-09-25T19:49:34.116542763Z",
+				organisations: [],
+			),
 			"630073509137350690": (
 				account: 630073509137350690,
-				last_pay: "2024-01-14T09:45:41.474767424Z",
+				last_pay: "2024-03-01T17:05:23.846199616Z",
 				organisations: [
-					12,
 					4,
 					47,
 					48,
@@ -114,36 +137,9 @@
 				],
 				role_id: Some("1152273611890098206"),
 			),
-			"825304836894883840": (
-				account: 80,
-				last_pay: "-262144-01-01T00:00:00Z",
-				organisations: [],
-			),
-			"1087428990547009556": (
-				account: 76,
-				last_pay: "2024-01-14T06:20:42.561693314Z",
-				organisations: [
-					109,
-				],
-			),
-			"758042322364792974": (
-				account: 24,
-				last_pay: "2023-12-20T11:13:14.053493148Z",
-				organisations: [],
-			),
-			"762325231925854231": (
-				account: 64,
-				last_pay: "2023-12-15T19:10:54.647371687Z",
-				organisations: [],
-			),
 			"756400767723765780": (
 				account: 101,
 				last_pay: "-262144-01-01T00:00:00Z",
-				organisations: [],
-			),
-			"764206694841974795": (
-				account: 68,
-				last_pay: "2024-01-14T12:53:34.435052371Z",
 				organisations: [],
 			),
 			"971793947879952435": (
@@ -151,37 +147,122 @@
 				last_pay: "-262144-01-01T00:00:00Z",
 				organisations: [],
 			),
+			"723106960035020811": (
+				account: 97,
+				last_pay: "2023-10-22T19:31:45.364320848Z",
+				organisations: [],
+			),
 		},
 	),
 	accounts: (
 		personal_accounts: {
-			98: (
-				name: "Domonic",
-				balance: 3753,
-			),
-			97: (
-				name: "Cameron",
-				balance: 2875,
-			),
-			89: (
-				name: "Clara",
-				balance: 2335,
-			),
-			709767987242074116: (
-				name: "Adam",
-				balance: 7961,
-			),
-			101: (
-				name: "whosjy",
-				balance: 100,
-			),
 			105: (
 				name: "dvalx",
 				balance: 600,
 			),
+			101: (
+				name: "whosjy",
+				balance: 2300,
+			),
+			653127445922316299: (
+				name: "Donnie",
+				balance: 3855,
+			),
+			887020108696920116: (
+				name: "Alan",
+				balance: 25946,
+				owned_bills: [
+					107,
+				],
+			),
+			722468356711776269: (
+				name: "Elliot F.",
+				balance: 7464,
+			),
+			97: (
+				name: "Cameron",
+				balance: 2756,
+			),
+			102: (
+				name: "fredo12321",
+				balance: 2300,
+			),
+			104: (
+				name: "anais_beavis",
+				balance: 1787,
+			),
+			100: (
+				name: "Philip",
+				balance: 530,
+			),
+			68: (
+				name: "Xiaokun",
+				balance: 481,
+			),
+			86: (
+				name: "Elliot (W)",
+				balance: 1042,
+			),
+			89: (
+				name: "Clara",
+				balance: 2489,
+			),
+			76: (
+				name: "Tristan",
+				balance: 9152,
+			),
+			79: (
+				name: "Reuben",
+				balance: 5802,
+			),
+			88: (
+				name: "Tegan",
+				balance: 1093,
+			),
+			80: (
+				name: "Ethan",
+				balance: 1500,
+			),
+			98: (
+				name: "Domonic",
+				balance: 175,
+			),
+			888167676512440352: (
+				name: "Chino",
+				balance: 6535,
+			),
+			103: (
+				name: "HenmanJ",
+				balance: 0,
+			),
+			630073509137350690: (
+				name: "James",
+				balance: 10576,
+				owned_bills: [
+					93,
+					106,
+				],
+				subscribed_bills: [
+					96,
+				],
+			),
+			709767987242074116: (
+				name: "Adam",
+				balance: 26894,
+			),
+			64: (
+				name: "Twaddle",
+				balance: 1231,
+				owned_bills: [
+					110,
+				],
+				subscribed_bills: [
+					93,
+				],
+			),
 			737928480389333004: (
 				name: "Louis",
-				balance: 3686,
+				balance: 4630,
 				owned_bills: [
 					85,
 				],
@@ -189,103 +270,42 @@
 					96,
 				],
 			),
-			80: (
-				name: "Ethan",
-				balance: 1500,
-			),
-			76: (
-				name: "Tristan",
-				balance: 1490,
-			),
-			888167676512440352: (
-				name: "Chino",
-				balance: 2276,
-			),
-			64: (
-				name: "Twaddle",
-				balance: 331,
-				subscribed_bills: [
-					93,
-				],
-			),
 			24: (
 				name: "Adonis",
-				balance: 889,
+				balance: 10189,
 				owned_bills: [
 					108,
 				],
 			),
-			86: (
-				name: "Elliot (W)",
-				balance: 1042,
-			),
-			104: (
-				name: "anais_beavis",
-				balance: 87,
-			),
-			887020108696920116: (
-				name: "Alan",
-				balance: 11997,
-				owned_bills: [
-					107,
-				],
-			),
-			103: (
-				name: "HenmanJ",
-				balance: 0,
-			),
-			68: (
-				name: "Xiaokun",
-				balance: 3853,
-			),
-			653127445922316299: (
-				name: "Donnie",
-				balance: 4146,
-			),
-			100: (
-				name: "Philip",
-				balance: 800,
-			),
-			102: (
-				name: "fredo12321",
-				balance: 100,
-			),
-			88: (
-				name: "Tegan",
-				balance: 1093,
-			),
-			630073509137350690: (
-				name: "James",
-				balance: 11266,
-				owned_bills: [
-					93,
-					106,
-				],
-				subscribed_bills: [
-					96,
-				],
-			),
-			79: (
-				name: "Reuben",
-				balance: 2122,
-			),
-			722468356711776269: (
-				name: "Elliot F.",
-				balance: 7873,
-			),
 		},
 		organisation_accounts: {
+			52: (
+				name: "Petitions",
+				balance: 0,
+			),
 			11: (
 				name: "Short story long",
 				balance: 0,
 			),
-			0: (
-				name: "Treasury",
-				balance: 34808,
-				subscribed_bills: [
-					106,
-					107,
-				],
+			109: (
+				name: "Go Consulting\'s Asbestos Removal Division",
+				balance: 77,
+			),
+			51: (
+				name: "Constitution",
+				balance: 0,
+			),
+			48: (
+				name: "CMA",
+				balance: 0,
+			),
+			69: (
+				name: "CheeseChess",
+				balance: 1446,
+			),
+			4: (
+				name: "Gladvertising",
+				balance: 398,
 			),
 			53: (
 				name: "Contracts",
@@ -295,9 +315,40 @@
 				name: "Casino",
 				balance: 0,
 			),
+			25: (
+				name: "a",
+				balance: 0,
+			),
+			0: (
+				name: "Treasury",
+				balance: 0,
+				subscribed_bills: [
+					110,
+				],
+			),
+			19: (
+				name: "jeffrey/",
+				balance: 0,
+			),
+			18: (
+				name: "Short Story Long Plus",
+				balance: 0,
+			),
+			22: (
+				name: "the d man empire",
+				balance: 0,
+			),
+			47: (
+				name: "parliament",
+				balance: 0,
+			),
+			7: (
+				name: "Auction House",
+				balance: 0,
+			),
 			12: (
 				name: "Go Consulting Ltd.",
-				balance: 33342,
+				balance: 10200,
 				owned_bills: [
 					67,
 					82,
@@ -306,88 +357,31 @@
 					82,
 				],
 			),
-			48: (
-				name: "CMA",
-				balance: 2,
-			),
-			18: (
-				name: "Short Story Long Plus",
-				balance: 0,
-			),
-			25: (
-				name: "a",
-				balance: 0,
-			),
-			69: (
-				name: "CheeseChess",
-				balance: 1649,
-			),
-			19: (
-				name: "jeffrey/",
-				balance: 0,
-			),
-			109: (
-				name: "Go Consulting\'s Asbestos Removal Division",
-				balance: 82,
-			),
-			7: (
-				name: "Auction House",
-				balance: 0,
-			),
-			47: (
-				name: "parliament",
-				balance: 0,
+			94: (
+				name: "GeoClash",
+				balance: 8552,
+				owned_bills: [
+					96,
+				],
 			),
 			66: (
 				name: "20k CheeseCoin",
 				balance: 0,
 			),
-			4: (
-				name: "Gladvertising",
-				balance: 474,
-			),
-			22: (
-				name: "the d man empire",
-				balance: 0,
-			),
-			94: (
-				name: "GeoClash",
-				balance: 7468,
-				owned_bills: [
-					95,
-					96,
-				],
-			),
-			52: (
-				name: "Petitions",
-				balance: 0,
-			),
-			51: (
-				name: "Constitution",
-				balance: 0,
-			),
 		},
 	),
 	bills: {
-		85: (
-			name: "Louis money",
-			last_pay: 738893,
+		108: (
+			name: "Cabinet (Adonis)",
+			last_pay: 738940,
 			interval: 7,
-			amount: 1000,
-			owner: 737928480389333004,
-			subscribers: [],
-		),
-		67: (
-			name: "Cheese Bot",
-			last_pay: 738896,
-			interval: 7,
-			amount: 1500,
-			owner: 12,
+			amount: 300,
+			owner: 24,
 			subscribers: [],
 		),
 		82: (
 			name: "Cheesebot Ping Squad",
-			last_pay: 738893,
+			last_pay: 738942,
 			interval: 7,
 			amount: 100,
 			owner: 12,
@@ -395,55 +389,17 @@
 				12,
 			],
 		),
-		95: (
-			name: "GeoClash Battle Pass (Weekly)",
-			last_pay: 738897,
-			interval: 7,
-			amount: 500,
-			owner: 94,
-			subscribers: [],
-		),
-		93: (
-			name: "Write bullet points",
-			last_pay: 738899,
-			interval: 7,
-			amount: 600,
-			owner: 630073509137350690,
-			subscribers: [
-				64,
-			],
-		),
-		106: (
-			name: "Stats",
-			last_pay: 738893,
-			interval: 7,
-			amount: 300,
-			owner: 630073509137350690,
-			subscribers: [
-				0,
-			],
-		),
-		108: (
-			name: "Cabinet (Adonis)",
-			last_pay: 738898,
-			interval: 7,
-			amount: 300,
-			owner: 24,
-			subscribers: [],
-		),
 		107: (
 			name: "Cabinet (Alan)",
-			last_pay: 738893,
+			last_pay: 738942,
 			interval: 7,
 			amount: 300,
 			owner: 887020108696920116,
-			subscribers: [
-				0,
-			],
+			subscribers: [],
 		),
 		96: (
 			name: "GeoClash Battle Pass (Monthly)",
-			last_pay: 738891,
+			last_pay: 738921,
 			interval: 30,
 			amount: 1000,
 			owner: 94,
@@ -452,16 +408,60 @@
 				630073509137350690,
 			],
 		),
+		106: (
+			name: "Stats",
+			last_pay: 738942,
+			interval: 7,
+			amount: 300,
+			owner: 630073509137350690,
+			subscribers: [],
+		),
+		85: (
+			name: "Louis money",
+			last_pay: 738942,
+			interval: 7,
+			amount: 1000,
+			owner: 737928480389333004,
+			subscribers: [],
+		),
+		93: (
+			name: "Write bullet points",
+			last_pay: 738941,
+			interval: 7,
+			amount: 600,
+			owner: 630073509137350690,
+			subscribers: [
+				64,
+			],
+		),
+		110: (
+			name: "pay me to pay james",
+			last_pay: 738944,
+			interval: 7,
+			amount: 600,
+			owner: 64,
+			subscribers: [
+				0,
+			],
+		),
+		67: (
+			name: "Cheese Bot",
+			last_pay: 738945,
+			interval: 7,
+			amount: 1500,
+			owner: 12,
+			subscribers: [],
+		),
 	},
-	next_account: 110,
+	next_account: 112,
 	wealth_tax: [
 		(2000, 0.0),
 		(20000, 7.0),
 		(4294967295, 10.0),
 	],
 	vat: 2.0,
-	last_wealth_tax: "2024-01-13T05:00:00Z",
-	last_day: 738899,
+	last_wealth_tax: "2024-01-27T05:00:00Z",
+	last_day: 738946,
 	treasury_balances: [
 		82398,
 		80898,
@@ -850,6 +850,53 @@
 		39316,
 		44508,
 		35608,
+		34608,
+		33008,
+		31808,
+		30408,
+		29208,
+		35294,
+		33894,
+		32894,
+		31544,
+		30744,
+		28944,
+		32744,
+		38580,
+		37180,
+		36180,
+		34780,
+		33580,
+		30680,
+		29680,
+		28780,
+		29180,
+		28680,
+		28480,
+		27280,
+		28880,
+		28446,
+		27846,
+		27546,
+		56946,
+		55816,
+		54726,
+		53726,
+		53326,
+		52726,
+		51926,
+		50026,
+		48995,
+		47872,
+		46272,
+		45672,
+		45072,
+		44272,
+		48672,
+		47197,
+		46397,
+		45197,
+		44997,
 	],
 	wealth_taxes: [
 		4869,
@@ -921,20 +968,21 @@
 		6075,
 		6433,
 		6192,
+		6886,
+		6636,
 	],
 	election: {
+		"762325231925854231": [
+			"762325231925854231",
+		],
+		"1068971424292814909": [
+			"1150815316050452530",
+		],
+		"1087428990547009556": [],
 		"722468356711776269": [],
 		"677571708156117012": [],
-		"762325231925854231": [],
-		"737928480389333004": [],
-		"1087428990547009556": [
-			"1087428990547009556",
-			"887020108696920116",
-		],
-		"1068971424292814909": [],
 	},
-	previous_time: "2024-01-13T01:01:02.112691357Z",
-	previous_results: "Elliot F., 4\nTristan, 4\nTwaddle, 3\nfredo12321, 2\nLouis, 1\nReuben, 0\n",
-	president: "722468356711776269",
+	previous_time: "2024-02-24T00:54:49.395339638Z",
+	previous_results: "Twaddle, 5\nReuben, 2\nTristan, 2\nElliot F., 2\nfredo12321, 1\n",
 	decree: 3,
 )
