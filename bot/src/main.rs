@@ -235,9 +235,6 @@ fn check_election(bot_data: &mut BotData) {
 }
 
 async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
-	// Until someone brings back wealth tax
-	return;
-
 	if (chrono::Utc::now() - bot_data.last_wealth_tax) <= chrono::Duration::hours(24 * 7 - 4) {
 		return;
 	}
