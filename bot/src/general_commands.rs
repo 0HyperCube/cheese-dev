@@ -34,7 +34,7 @@ pub async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
 		} else {
 			format!(" <{}", format_cheesecoin(amount))
 		};
-		let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Wealth Tax{}:", limit), tax_rate);
+		let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Balance Tax{}:", limit), tax_rate);
 	}
 
 	let _ = write!(&mut description, "{:-20} {:.2}%\n", "VAT", handler_data.bot_data.vat);

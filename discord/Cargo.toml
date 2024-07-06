@@ -12,11 +12,13 @@ serde = {version="*", features = ["derive"] }
 serde_repr = "0.1"
 serde_json = "*"
 
-hyper = { version = "*", features = ["client", "http1", "tcp"] }
-hyper-tls = "*"
-tokio = "*"
+hyper = { version = "1.4", features = ["client", "http1",] }
+hyper-util = { version = "*", features = ["client", "client-legacy", "tokio", "http1"] }
+http-body-util = "0.1"
+hyper-rustls = "*"
+tokio = "1.13"
 async-channel = "*"
-tokio-tungstenite = { version = "*", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.23", features = ["native-tls"] }
 futures-util = "*"
 url = "*"
 

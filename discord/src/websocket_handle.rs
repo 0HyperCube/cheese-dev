@@ -6,7 +6,6 @@ use hyper::header::{HeaderValue, AUTHORIZATION};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::*;
-use url::Url;
 
 pub type Read = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
@@ -17,11 +16,11 @@ pub struct Connection {
 
 /// Connects to the gateway
 pub async fn connect_gateway(address: String, header: String) -> Option<Connection> {
-	let socket = Url::parse(&(address + "?v=10&encoding=json")).unwrap();
-	info!("Connecting to {}", socket);
+	let uri = address + "?v=10&encoding=json";
+	info!("Connecting to {}", uri);
 
 	// Add auth headers
-	let mut request = socket.into_client_request().unwrap();
+	let mut request = uri.into_client_request().unwrap();
 	request.headers_mut().insert(AUTHORIZATION, HeaderValue::from_str(&header).unwrap());
 
 	// Start a websocket stream
@@ -41,9 +40,9 @@ pub async fn connect_gateway(address: String, header: String) -> Option<Connecti
 /// Sends outgoing messages that are received from the async-channel
 async fn outgoing_messages(
 	mut write: SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>,
-	mut handle_outgoing_message: Receiver<String>,
+	handle_outgoing_message: Receiver<String>,
 ) {
-	while let Some(x) = handle_outgoing_message.next().await {
+	while let Ok(x) = handle_outgoing_message.recv().await {
 		debug!("Sent message {}", x);
 		write.send(Message::Text(x)).await.unwrap();
 	}

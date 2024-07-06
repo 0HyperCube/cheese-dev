@@ -310,7 +310,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 		if total_tax > 0 {
 			let description = format!(
-				"Wealth tax has been applied at `{}`.\n\n**Payments**\n```\n{}```",
+				"Balance tax has been applied at `{}`.\n\n**Payments**\n```\n{}```",
 				paid.into_iter()
 					.filter(|(cc, _)| *cc != 0)
 					.map(|(a, b)| format!("{}: {:.2}%", format_cheesecoin(a), b))
@@ -321,7 +321,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 
 			if let Err(e) = dm_embed(
 				client,
-				Embed::standard().with_title("Wealth Tax").with_description(description),
+				Embed::standard().with_title("Balance Tax").with_description(description),
 				user_id.clone(),
 			)
 			.await
@@ -334,10 +334,10 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 	bot_data.wealth_taxes.push(total_tax);
 	for (user_id, user) in &mut bot_data.users.users {
 		if user.organisations.contains(&0) {
-			let description = format!("The treasury has collected {} of wealth tax.", format_cheesecoin(total_tax));
+			let description = format!("The treasury has collected {} of balance tax.", format_cheesecoin(total_tax));
 			if let Err(e) = dm_embed(
 				client,
-				Embed::standard().with_title("Total Wealth Tax").with_description(description),
+				Embed::standard().with_title("Total Balance Tax").with_description(description),
 				user_id.clone(),
 			)
 			.await
@@ -461,7 +461,7 @@ async fn treasury_balance(bot_data: &mut BotData, client: &mut DiscordClient) {
 		} else {
 			format!(" <{}", format_cheesecoin(amount))
 		};
-		let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Wealth Tax{}:", limit), tax_rate);
+		let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Balance Tax{}:", limit), tax_rate);
 	}
 	let _ = write!(&mut description, "{:-20} {}\n```", "Treasury Balance:", format_cheesecoin(balance));
 	bot_data.treasury_balances.push(balance);
@@ -502,7 +502,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 	let gateway = GatewayMeta::get_gateway_meta(client).await.unwrap();
 	info!("received gateway metadata: {:?}", gateway);
 
-	let (send_ev, mut recieve_ev) = async_channel::unbounded();
+	let (send_ev, recieve_ev) = async_channel::unbounded();
 
 	let Some(Connection { send_outgoing_message, read }) = client.connect_gateway(gateway.url).await else {
 		return;
@@ -515,7 +515,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 	tokio::spawn(dispatch_msg(send_ev.clone(), 3 * 60 * 60 * 1000, MainMessage::WealthTax));
 	tokio::spawn(dispatch_msg(send_ev.clone(), 3 * 60 * 60 * 1000, MainMessage::CheckElection));
 
-	while let Some(main_message) = recieve_ev.next().await {
+	while let Ok(main_message) = recieve_ev.recv().await {
 		match main_message {
 			MainMessage::Gateway(deserialised) => match deserialised {
 				GatewayRecieve::Dispatch { d, s } => {

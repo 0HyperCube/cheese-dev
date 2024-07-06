@@ -1,17 +1,14 @@
 use std::string::FromUtf8Error;
 
-use hyper::{
-	client::HttpConnector,
-	header::{HeaderValue, AUTHORIZATION, CONTENT_TYPE},
-	Body, Client, Method, Request,
-};
-
 use super::websocket_handle;
-use hyper_tls::HttpsConnector;
+use http_body_util::BodyExt;
+use hyper::header::{HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use hyper::{Method, Request};
+use hyper_util::rt::TokioExecutor;
 
 #[derive(std::fmt::Debug)]
 pub enum NetError {
-	Hyper(hyper::Error),
+	Hyper(hyper_util::client::legacy::Error),
 	HyperHttp(hyper::http::Error),
 	Utf8(FromUtf8Error),
 	DeJson(serde_json::Error, String),
@@ -19,7 +16,7 @@ pub enum NetError {
 
 pub struct DiscordClient {
 	pub token: String,
-	client: Client<HttpsConnector<HttpConnector>>,
+	client: hyper_util::client::legacy::Client<hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>, String>,
 }
 impl DiscordClient {
 	pub const API: &'static str = "https://discord.com/api/v10";
@@ -27,10 +24,15 @@ impl DiscordClient {
 
 	/// Constructs a new client
 	pub fn new(token: &'static str) -> Self {
-		let https = HttpsConnector::new();
+		let https = hyper_rustls::HttpsConnectorBuilder::new()
+			.with_native_roots()
+			.unwrap()
+			.https_only()
+			.enable_http1()
+			.build();
 		Self {
 			token: token.to_string(),
-			client: Client::builder().build::<_, hyper::Body>(https),
+			client: hyper_util::client::legacy::Client::builder(TokioExecutor::new()).build(https),
 		}
 	}
 
@@ -42,7 +44,7 @@ impl DiscordClient {
 		let mut req = Request::builder()
 			.method(&method)
 			.uri(uri)
-			.body(Body::from(body.clone()))
+			.body(body.clone())
 			.map_err(NetError::HyperHttp)?;
 
 		req.headers_mut()
@@ -58,7 +60,8 @@ impl DiscordClient {
 
 		// Concatenate the body stream into a single buffer...
 
-		let bytes = hyper::body::to_bytes(res).await.map_err(NetError::Hyper)?;
+		let x = res.collect().await.unwrap();
+		let bytes = x.to_bytes();
 
 		let utf = String::from_utf8(bytes.to_vec()).map_err(NetError::Utf8)?;
 
