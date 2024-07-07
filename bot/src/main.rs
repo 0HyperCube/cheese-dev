@@ -505,8 +505,11 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 	let (send_ev, recieve_ev) = async_channel::unbounded();
 
 	let Some(Connection { send_outgoing_message, read }) = client.connect_gateway(gateway.url).await else {
+		error!("Failed to connect");
 		return;
 	};
+
+	info!("Connected");
 
 	let mut sequence_number = None;
 

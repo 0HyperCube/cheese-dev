@@ -17,14 +17,20 @@ pub struct Connection {
 /// Connects to the gateway
 pub async fn connect_gateway(address: String, header: String) -> Option<Connection> {
 	let uri = address + "?v=10&encoding=json";
-	info!("Connecting to {}", uri);
+	info!("Connecting to {} header {}", uri, header);
 
 	// Add auth headers
 	let mut request = uri.into_client_request().unwrap();
 	request.headers_mut().insert(AUTHORIZATION, HeaderValue::from_str(&header).unwrap());
 
 	// Start a websocket stream
-	let (socket, _) = tokio_tungstenite::connect_async(request).await.ok()?;
+	let socket = match tokio_tungstenite::connect_async(request).await {
+		Ok((socket, _)) => socket,
+		Err(e) => {
+			error!("Error connecting websocket {e:?}");
+			return None;
+		}
+	};
 
 	// Split socket into reader and writer
 	let (write, read) = socket.split();
