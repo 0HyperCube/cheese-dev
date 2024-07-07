@@ -31,7 +31,7 @@ impl DiscordClient {
 			.enable_http1()
 			.build();
 		Self {
-			token: token.to_string(),
+			token: token.split_ascii_whitespace().collect(),
 			client: hyper_util::client::legacy::Client::builder(TokioExecutor::new()).build(https),
 		}
 	}

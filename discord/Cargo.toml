@@ -18,7 +18,7 @@ http-body-util = "0.1"
 hyper-rustls = "*"
 tokio = "1.13"
 async-channel = "*"
-tokio-tungstenite = { version = "0.23", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.23", features = ["rustls-tls-native-roots"] }
 futures-util = "*"
 url = "*"
 

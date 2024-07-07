@@ -2,7 +2,7 @@ use crate::websocket_handle::tungstenite::Message;
 use async_channel::{Receiver, Sender};
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
-use hyper::header::{HeaderValue, AUTHORIZATION};
+use hyper::header::{HeaderValue, AUTHORIZATION, CONNECTION, USER_AGENT};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::*;
@@ -16,12 +16,16 @@ pub struct Connection {
 
 /// Connects to the gateway
 pub async fn connect_gateway(address: String, header: String) -> Option<Connection> {
-	let uri = address + "?v=10&encoding=json";
-	info!("Connecting to {} header {}", uri, header);
+	let uri = address;
+	info!("Connecting to {}", uri,);
 
 	// Add auth headers
 	let mut request = uri.into_client_request().unwrap();
 	request.headers_mut().insert(AUTHORIZATION, HeaderValue::from_str(&header).unwrap());
+	request.headers_mut().insert(
+		USER_AGENT,
+		HeaderValue::from_str("DiscordBot (https://github.com/0HyperCube/cheese-dev, 1)").unwrap(),
+	);
 
 	// Start a websocket stream
 	let socket = match tokio_tungstenite::connect_async(request).await {
