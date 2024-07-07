@@ -198,7 +198,6 @@ async fn run_loop() {
 	loop {
 		warn!("Running in run loop");
 		run(&mut client, &mut bot_data, path).await;
-		break;
 	}
 }
 
