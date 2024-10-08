@@ -2,7 +2,7 @@ use crate::websocket_handle::tungstenite::Message;
 use async_channel::{Receiver, Sender};
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
-use hyper::header::{HeaderValue, AUTHORIZATION, CONNECTION, USER_AGENT};
+use hyper::header::{HeaderValue, AUTHORIZATION, USER_AGENT};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::*;

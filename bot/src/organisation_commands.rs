@@ -155,7 +155,7 @@ pub async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 
 	let organisation_balance = handler_data.bot_data.accounts.organisation_accounts[&organisation].balance;
 
-	let Some(recipiant) = handler_data
+	let Some(recipient) = handler_data
 		.bot_data
 		.accounts
 		.account_mut(handler_data.bot_data.cheese_user(&handler_data.user).account)
@@ -168,7 +168,7 @@ pub async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 		return;
 	};
 
-	recipiant.balance += organisation_balance;
+	recipient.balance += organisation_balance;
 
 	handler_data
 		.bot_data

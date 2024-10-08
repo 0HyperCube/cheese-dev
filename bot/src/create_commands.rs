@@ -16,8 +16,8 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 		.with_options(
 			ApplicationCommandOption::new()
 				.with_option_type(CommandOptionType::String)
-				.with_name("recipiant")
-				.with_description("Recipiant of the payment")
+				.with_name("recipient")
+				.with_description("recipient of the payment")
 				.with_required(true)
 				.with_autocomplete(true),
 		)
@@ -292,6 +292,39 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 				.with_description("Description of decree")
 				.with_required(true),
 		);
+
+	let sudo = ApplicationCommand::new()
+		.with_command_type(CommandType::Chat)
+		.with_name("sudo")
+		.with_description("super user do")
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::SubCommandGroup)
+				.with_name("print")
+				.with_description("Utilise a printer.")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_option_type(CommandOptionType::SubCommand)
+						.with_name("cheesecoin")
+						.with_description("Print cheesecoin with a printer.")
+						.with_options(
+							ApplicationCommandOption::new()
+								.with_option_type(CommandOptionType::String)
+								.with_name("recipient")
+								.with_description("recipient of the payment")
+								.with_required(true)
+								.with_autocomplete(true),
+						)
+						.with_options(
+							ApplicationCommandOption::new()
+								.with_option_type(CommandOptionType::Number)
+								.with_name("cheesecoin")
+								.with_description("Number of cheesecoin")
+								.with_required(true),
+						),
+				),
+		);
+
 	ApplicationCommandList::new()
 		.with_commands(about)
 		.with_commands(balances)
@@ -302,6 +335,7 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 		.with_commands(parliament)
 		.with_commands(role)
 		.with_commands(decree)
+		.with_commands(sudo)
 		.put_bulk_override_global(client, application_id)
 		.await
 		.unwrap();

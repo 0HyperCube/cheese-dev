@@ -38,7 +38,7 @@ fn init_logger() {
 
 	info!("Initalised logger!");
 
-	panic::update_hook(move |prev, info: &panic::PanicInfo<'_>| {
+	panic::update_hook(move |prev, info: &panic::PanicHookInfo<'_>| {
 		info!("{:?}", info.to_string());
 		prev(info);
 	});
@@ -74,6 +74,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"bill view" => bill_commands::bill_view(&mut handler_data).await,
 				"role assign" => role_commands::role_assign(&mut handler_data).await,
 				"decree" => decree::decree(&mut handler_data).await,
+				"sudo print cheesecoin" => general_commands::print_money(&mut handler_data).await,
 				_ => warn!("Unhandled command {}", command),
 			};
 		}
@@ -88,7 +89,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 			info!("Autocomplete focused {} command {} value {}", name, command, str_value);
 
 			let choices = match (command.as_str(), name.as_str()) {
-				("pay", "recipiant") => handler_data
+				("pay", "recipient") | ("sudo print cheesecoin", "recipient") => handler_data
 					.bot_data
 					.personal_accounts()
 					.chain(handler_data.bot_data.organisation_accounts())
@@ -431,9 +432,9 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 						format!("{:20} {}{}", "Account Name", "Charge", bill_owner_result)
 					},
 				));
-			if let Some(recipiant) = bot_data.users.account_owner(bill.owner) {
-				if let Err(e) = dm_embed(client, embed, recipiant.clone()).await {
-					error!("Failed to send collected bill to {recipiant} error: {e:?}");
+			if let Some(recipient) = bot_data.users.account_owner(bill.owner) {
+				if let Err(e) = dm_embed(client, embed, recipient.clone()).await {
+					error!("Failed to send collected bill to {recipient} error: {e:?}");
 				}
 			}
 			if let Some(owner) = bot_data.accounts.account_mut(bill.owner) {

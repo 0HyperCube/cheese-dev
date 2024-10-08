@@ -23,9 +23,9 @@ pub async fn role_assign(handler_data: &mut HandlerData<'_>) {
 	let color = r << 16 | g << 8 | b;
 
 	let user = handler_data.bot_data.cheese_user(&handler_data.user).account;
-	let (_, recipiant_message) = transact(handler_data, reciever, user, price);
+	let (_, recipient_message) = transact(handler_data, reciever, user, price);
 
-	if recipiant_message.is_none() {
+	if recipient_message.is_none() {
 		respond_with_embed(
 			handler_data,
 			Embed::standard()

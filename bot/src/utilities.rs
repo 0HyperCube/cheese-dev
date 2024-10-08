@@ -126,14 +126,14 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 }
 
 /// Handles transactions between accounts - returns (payer message, reciever message)
-pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u64, amount: f64) -> (String, Option<String>) {
+pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipient: u64, from: u64, amount: f64) -> (String, Option<String>) {
 	// Special error for negitive
 	if amount < 0. {
 		return ("Cannot pay a negative amount.".into(), None);
 	}
 	// Amount cast into real units
 	let amount = (amount * 100.) as u32;
-	if !handler_data.bot_data.accounts.exists(recipiant) {
+	if !handler_data.bot_data.accounts.exists(recipient) {
 		return (format!("To account does not exist"), None);
 	}
 	let Some(from) = handler_data.bot_data.accounts.account_mut(from) else {
@@ -147,12 +147,12 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 	from.balance -= amount;
 	let payer_name = from.name.clone();
 
-	let recipiant = handler_data.bot_data.accounts.account_mut(recipiant).unwrap();
-	recipiant.balance += amount;
+	let recipient = handler_data.bot_data.accounts.account_mut(recipient).unwrap();
+	recipient.balance += amount;
 
 	let reciever_message = format!(
 		"Your account - {} - has received {} from {}.",
-		recipiant.name,
+		recipient.name,
 		format_cheesecoin(amount),
 		payer_name
 	);
@@ -161,8 +161,29 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipiant: u64, from: u6
 		"Successfully transfered {} from {} to {}.",
 		format_cheesecoin(amount),
 		payer_name,
-		recipiant.name
+		recipient.name
 	);
+
+	(sender_message, Some(reciever_message))
+}
+
+pub fn enact_print_money<'a>(handler_data: &mut HandlerData<'a>, recipient: u64, amount: f64) -> (String, Option<String>) {
+	let controller = handler_data.bot_data.personal_account_name(&handler_data.user);
+	// Special error for negitive
+	if amount < 0. {
+		return ("Cannot print a negative amount.".into(), None);
+	}
+	// Amount cast into real units
+	let amount = (amount * 100.) as u32;
+
+	let Some(recipient) = handler_data.bot_data.accounts.account_mut(recipient) else {
+		return (format!("To account does not exist"), None);
+	};
+	recipient.balance += amount;
+
+	let reciever_message = format!("{} printed {} to {}.", controller, format_cheesecoin(amount), recipient.name,);
+
+	let sender_message = format!("Successfully printed {} to {}.", format_cheesecoin(amount), recipient.name);
 
 	(sender_message, Some(reciever_message))
 }

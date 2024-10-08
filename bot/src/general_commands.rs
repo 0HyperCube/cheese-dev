@@ -59,12 +59,12 @@ pub async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
 /// Handles the `/pay` command
 pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 	let bot_data = &mut handler_data.bot_data;
-	let recipiant = match account_option(bot_data, &handler_data.options["recipiant"], BotData::account_exists, &handler_data.user).await {
+	let recipient = match account_option(bot_data, &handler_data.options["recipient"], BotData::account_exists, &handler_data.user).await {
 		Some(x) => x,
 		None => {
 			respond_with_embed(
 				handler_data,
-				Embed::standard().with_title("Payment").with_description("Invalid recipiant."),
+				Embed::standard().with_title("Payment").with_description("Invalid recipient."),
 			)
 			.await;
 			return;
@@ -79,14 +79,14 @@ pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 	};
 	let amount = handler_data.options["cheesecoin"].as_float();
 
-	let (payer_message, recipiant_message) = transact(handler_data, recipiant, from, amount);
+	let (payer_message, recipient_message) = transact(handler_data, recipient, from, amount);
 
-	if let Some(message) = recipiant_message {
-		if let Some(recipiant) = handler_data.bot_data.users.account_owner(recipiant) {
+	if let Some(message) = recipient_message {
+		if let Some(recipient) = handler_data.bot_data.users.account_owner(recipient) {
 			if let Err(e) = dm_embed(
 				handler_data.client,
 				Embed::standard().with_title("Payment").with_description(message),
-				recipiant,
+				recipient,
 			)
 			.await
 			{
@@ -96,6 +96,66 @@ pub async fn pay<'a>(handler_data: &mut HandlerData<'a>) {
 	}
 
 	respond_with_embed(handler_data, Embed::standard().with_title("Payment").with_description(payer_message)).await;
+}
+
+/// Handles the `/sudo print cheesecoin` command
+pub async fn print_money<'a>(handler_data: &mut HandlerData<'a>) {
+	let bot_data = &mut handler_data.bot_data;
+
+	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
+	let is_valid = rolls.as_ref().map_or(false, |user| user.roles.contains(&STAR_ROLE.to_string()));
+
+	if !is_valid {
+		respond_with_embed(
+			handler_data,
+			Embed::standard()
+				.with_title("Print money")
+				.with_description("Super users only. Other users: buy a pony."),
+		)
+		.await;
+		return;
+	}
+
+	let recipient = match account_option(bot_data, &handler_data.options["recipient"], BotData::account_exists, &handler_data.user).await {
+		Some(x) => x,
+		None => {
+			respond_with_embed(
+				handler_data,
+				Embed::standard().with_title("Payment").with_description("Invalid recipient."),
+			)
+			.await;
+			return;
+		}
+	};
+	let amount = handler_data.options["cheesecoin"].as_float();
+
+	let (payer_message, recipient_message) = enact_print_money(handler_data, recipient, amount);
+
+	if let Some(message) = recipient_message {
+		if let Some(recipient) = handler_data.bot_data.users.account_owner(recipient) {
+			if let Err(e) = dm_embed(
+				handler_data.client,
+				Embed::standard().with_title("Money Printed for you").with_description(&message),
+				recipient,
+			)
+			.await
+			{
+				warn!("Print money dm failed {e:?}");
+			}
+		}
+
+		let embed = Embed::standard().with_title("Money Printed").with_description(message);
+
+		if let Err(e) = ChannelMessage::new()
+			.with_embeds(embed)
+			.post_create(handler_data.client, "1270449388904251443")
+			.await
+		{
+			error!("Failed to post print money update {e:?}");
+		};
+	}
+
+	respond_with_embed(handler_data, Embed::standard().with_title("Print Money").with_description(payer_message)).await;
 }
 
 /// Handles the `/claim rollcall` command
@@ -129,11 +189,11 @@ pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	}
 	cheese_user.last_pay = chrono::Utc::now();
 
-	let recipiant = cheese_user.account;
+	let recipient = cheese_user.account;
 	let amount = 2.; //if is_president { 4. } else { 2. };
-	let (_, recipiant_message) = transact(handler_data, recipiant, TREASURY, amount);
+	let (_, recipient_message) = transact(handler_data, recipient, TREASURY, amount);
 
-	if let Some(message) = recipiant_message {
+	if let Some(message) = recipient_message {
 		respond_with_disappear_embed(handler_data, Embed::standard().with_title("Claim Rollcall").with_description(message)).await;
 	} else {
 		respond_with_embed(
