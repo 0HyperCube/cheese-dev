@@ -103,7 +103,9 @@ pub async fn print_money<'a>(handler_data: &mut HandlerData<'a>) {
 	let bot_data = &mut handler_data.bot_data;
 
 	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
-	let is_valid = rolls.as_ref().map_or(false, |user| user.roles.contains(&STAR_ROLE.to_string()));
+	let is_valid = rolls
+		.as_ref()
+		.map_or(false, |user| user.roles.contains(&"1293607752534593576".to_string()));
 
 	if !is_valid {
 		respond_with_embed(
@@ -148,7 +150,7 @@ pub async fn print_money<'a>(handler_data: &mut HandlerData<'a>) {
 
 		if let Err(e) = ChannelMessage::new()
 			.with_embeds(embed)
-			.post_create(handler_data.client, "1270449388904251443")
+			.post_create(handler_data.client, "1171567720345649202")
 			.await
 		{
 			error!("Failed to post print money update {e:?}");
