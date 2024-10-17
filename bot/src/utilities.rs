@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use discord::*;
 
-use crate::bot_data::*;
+use crate::{bot_data::*, CheeseCoinTy};
 
 /// Utility function for responding to an interaction with a message
 pub async fn respond_with_message<'a>(handler_data: &mut HandlerData<'a>, message: ChannelMessage) {
@@ -54,7 +54,7 @@ where
 }
 
 /// Utility function for formating cheesecoin as `4.23cc`
-pub fn format_cheesecoin(cc: u32) -> String {
+pub fn format_cheesecoin(cc: CheeseCoinTy) -> String {
 	format!("{:.2}cc", cc as f64 / 100.)
 }
 
@@ -128,11 +128,15 @@ pub fn construct_handler_data<'a>(mut interaction: Interaction, client: &'a mut 
 /// Handles transactions between accounts - returns (payer message, reciever message)
 pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipient: u64, from: u64, amount: f64) -> (String, Option<String>) {
 	// Special error for negitive
+	let amount = amount * 100.;
 	if amount < 0. {
 		return ("Cannot pay a negative amount.".into(), None);
 	}
+	if amount >= CheeseCoinTy::MAX as f64 {
+		return ("Out of range.".into(), None);
+	}
 	// Amount cast into real units
-	let amount = (amount * 100.) as u32;
+	let amount = amount as CheeseCoinTy;
 	if !handler_data.bot_data.accounts.exists(recipient) {
 		return (format!("To account does not exist"), None);
 	}
@@ -144,11 +148,11 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipient: u64, from: u6
 	if from.balance < amount {
 		return (format!("{} has only {}.", from.name, format_cheesecoin(from.balance)), None);
 	}
-	from.balance -= amount;
+	from.balance = from.balance.saturating_sub(amount);
 	let payer_name = from.name.clone();
 
 	let recipient = handler_data.bot_data.accounts.account_mut(recipient).unwrap();
-	recipient.balance += amount;
+	recipient.balance = recipient.balance.saturating_add(amount);
 
 	let reciever_message = format!(
 		"Your account - {} - has received {} from {}.",
@@ -170,16 +174,20 @@ pub fn transact<'a>(handler_data: &mut HandlerData<'a>, recipient: u64, from: u6
 pub fn enact_print_money<'a>(handler_data: &mut HandlerData<'a>, recipient: u64, amount: f64) -> (String, Option<String>) {
 	let controller = handler_data.bot_data.personal_account_name(&handler_data.user);
 	// Special error for negitive
+	let amount = amount * 100.;
 	if amount < 0. {
 		return ("Cannot print a negative amount.".into(), None);
 	}
+	if amount >= CheeseCoinTy::MAX as f64 {
+		return ("Out of range.".into(), None);
+	}
 	// Amount cast into real units
-	let amount = (amount * 100.) as u32;
+	let amount = amount as CheeseCoinTy;
 
 	let Some(recipient) = handler_data.bot_data.accounts.account_mut(recipient) else {
 		return (format!("To account does not exist"), None);
 	};
-	recipient.balance += amount;
+	recipient.balance = recipient.balance.saturating_add(amount);
 
 	let reciever_message = format!("{} printed {} to {}.", controller, format_cheesecoin(amount), recipient.name,);
 

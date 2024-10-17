@@ -1,12 +1,13 @@
 use crate::bot_data::*;
 use crate::utilities::*;
+use crate::CheeseCoinTy;
 use discord::*;
 
 pub async fn create_bill(handler_data: &mut HandlerData<'_>) {
 	let bill_name = handler_data.options["name"].as_str();
 
 	let cheesecoin = handler_data.options["cheesecoin"].as_float() * 100.;
-	if !cheesecoin.is_finite() || cheesecoin < 0. || cheesecoin >= u32::MAX as f64 {
+	if !cheesecoin.is_finite() || cheesecoin < 0. || cheesecoin >= CheeseCoinTy::MAX as f64 {
 		respond_with_embed(
 			handler_data,
 			Embed::standard()
@@ -16,7 +17,7 @@ pub async fn create_bill(handler_data: &mut HandlerData<'_>) {
 		.await;
 		return;
 	}
-	let cheesecoin = cheesecoin as u32;
+	let cheesecoin = cheesecoin as CheeseCoinTy;
 
 	let bot_data = &mut handler_data.bot_data;
 	let to = match account_option(*bot_data, &handler_data.options["to"], BotData::account_owned, &handler_data.user).await {

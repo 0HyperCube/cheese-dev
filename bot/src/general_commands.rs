@@ -1,7 +1,9 @@
 use crate::bot_data::*;
 use crate::utilities::*;
+use crate::CheeseCoinTy;
 use chrono::Datelike;
 use discord::*;
+
 //pub const MP_ROLL: &str = "985804444237172797";
 pub const STAR_ROLE: &str = "1171114445288779916";
 pub const PRESIDENT_ROLL: &str = "907660552938061834";
@@ -29,7 +31,7 @@ pub async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
 	);
 
 	for &(amount, tax_rate) in &handler_data.bot_data.wealth_tax {
-		let limit = if amount == u32::MAX {
+		let limit = if amount == u32::MAX as CheeseCoinTy || amount == CheeseCoinTy::MAX {
 			" (no limit)".to_string()
 		} else {
 			format!(" <{}", format_cheesecoin(amount))

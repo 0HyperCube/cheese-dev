@@ -22,6 +22,8 @@ mod organisation_commands;
 mod parliament_commands;
 mod role_commands;
 
+pub type CheeseCoinTy = u64;
+
 #[macro_use]
 extern crate log;
 
@@ -244,11 +246,11 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 	info!("Applying wealth tax.");
 
 	// Applies welth tax to a specific account returning the log information for the user
-	fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> Option<(String, u32)> {
+	fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> Option<(String, CheeseCoinTy)> {
 		let account = bot_data.accounts.account_mut(account)?;
 
-		let tax = ((account.balance as f64 * multiplier).ceil()) as u32;
-		account.balance -= tax;
+		let tax = ((account.balance as f64 * multiplier).ceil()) as CheeseCoinTy;
+		account.balance = account.balance.saturating_sub(tax);
 
 		let result = format!(
 			"\n{:20} -{:9} {}",
@@ -256,7 +258,8 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 			format_cheesecoin(tax),
 			format_cheesecoin(account.balance)
 		);
-		bot_data.treasury_account_mut().balance += tax;
+		let treasury = bot_data.treasury_account_mut();
+		treasury.balance = treasury.balance.saturating_add(tax);
 		Some((result, tax))
 	}
 
@@ -275,7 +278,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 					.iter()
 					.filter(|&&account| account != TREASURY)
 					.map(|x| bot_data.accounts.account(*x).map_or(0, |account| account.balance))
-					.sum::<u32>()
+					.fold(0, |a: CheeseCoinTy, b: CheeseCoinTy| a.saturating_add(b))
 		};
 
 		let mut total_wealth = origional_wealth;
@@ -355,7 +358,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 	for (_bill_id, bill) in &bot_data.bills {
 		let mut bill_owner_result = String::new();
-		let mut bill_owner_total = 0;
+		let mut bill_owner_total: CheeseCoinTy = 0;
 		let Some(bill_owner) = bot_data.accounts.account(bill.owner) else {
 			continue;
 		};
@@ -369,7 +372,7 @@ async fn check_bills(bot_data: &mut BotData, client: &mut DiscordClient) {
 				bill_owner_result += "\n";
 				if from.balance >= bill.amount {
 					from.balance -= bill.amount;
-					bill_owner_total += bill.amount;
+					bill_owner_total = bill_owner_total.saturating_add(bill.amount);
 					bill_owner_result += &format!("{:20} {}", from.name, format_cheesecoin(bill.amount));
 
 					let sender_message = format!(
@@ -457,7 +460,7 @@ async fn treasury_balance(bot_data: &mut BotData, client: &mut DiscordClient) {
 		format_cheesecoin(bot_data.total_currency()),
 	);
 	for &(amount, tax_rate) in &bot_data.wealth_tax {
-		let limit = if amount == u32::MAX {
+		let limit = if amount == u32::MAX as CheeseCoinTy || amount == CheeseCoinTy::MAX {
 			" (no limit)".to_string()
 		} else {
 			format!(" <{}", format_cheesecoin(amount))

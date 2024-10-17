@@ -1,5 +1,6 @@
 use crate::bot_data::*;
 use crate::utilities::*;
+use crate::CheeseCoinTy;
 use discord::hyper::Method;
 use discord::*;
 
@@ -8,9 +9,16 @@ pub async fn role_assign(handler_data: &mut HandlerData<'_>) {
 	let reciever = 722468356711776269;
 
 	let price = 15.;
-	let formatted_price = format_cheesecoin((price * 100.) as u32);
+	let formatted_price = format_cheesecoin((price * 100.) as CheeseCoinTy);
 
-	let access_colour = |name: &str| handler_data.options.get(name).map(|value| (value.as_float() as u8) as u32);
+	let access_colour = |name: &str| {
+		handler_data
+			.options
+			.get(name)
+			.map(|value| value.as_float())
+			.filter(|&val| 0. <= val && val <= 225.)
+			.map(|val| val as u32)
+	};
 	let (Some(r), Some(g), Some(b)) = (access_colour("r"), access_colour("g"), access_colour("b")) else {
 		respond_with_embed(
 			handler_data,

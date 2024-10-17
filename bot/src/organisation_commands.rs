@@ -168,7 +168,7 @@ pub async fn organisation_delete<'a>(handler_data: &mut HandlerData<'a>) {
 		return;
 	};
 
-	recipient.balance += organisation_balance;
+	recipient.balance = recipient.balance.saturating_add(organisation_balance);
 
 	handler_data
 		.bot_data

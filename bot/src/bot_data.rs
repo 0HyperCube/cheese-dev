@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::CheeseCoinTy;
 use chrono::Datelike;
 use discord::*;
 use serde::{Deserialize, Serialize};
@@ -26,7 +27,7 @@ pub struct Bill {
 	pub name: String,
 	pub last_pay: i32,
 	pub interval: i32,
-	pub amount: u32,
+	pub amount: CheeseCoinTy,
 	pub owner: AccountId,
 	pub subscribers: Vec<AccountId>,
 }
@@ -36,7 +37,7 @@ pub type BillId = u64;
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Account {
 	pub name: String,
-	pub balance: u32,
+	pub balance: CheeseCoinTy,
 	#[serde(skip_serializing_if = "Vec::is_empty", default)]
 	pub owned_bills: Vec<BillId>,
 	#[serde(skip_serializing_if = "Vec::is_empty", default)]
@@ -94,19 +95,19 @@ pub struct BotData {
 	#[serde(default)]
 	pub bills: HashMap<BillId, Bill>,
 	pub next_account: AccountId,
-	pub wealth_tax: Vec<(u32, f64)>,
+	pub wealth_tax: Vec<(CheeseCoinTy, f64)>,
 	pub vat: f64,
 	pub last_wealth_tax: chrono::DateTime<chrono::Utc>,
 	pub last_day: i32,
-	pub treasury_balances: Vec<u32>,
-	pub wealth_taxes: Vec<u32>,
+	pub treasury_balances: Vec<CheeseCoinTy>,
+	pub wealth_taxes: Vec<CheeseCoinTy>,
 	pub election: HashMap<String, Vec<String>>,
 	pub previous_time: chrono::DateTime<chrono::Utc>,
 	pub previous_results: String,
 	#[serde(skip)]
 	pub file_path: String,
 	#[serde(default)]
-	pub decree: u32,
+	pub decree: u64,
 }
 
 impl Default for BotData {
@@ -127,7 +128,7 @@ impl Default for BotData {
 			},
 			bills: HashMap::new(),
 			next_account: 1,
-			wealth_tax: vec![(1000, 5.), (10000, 7.), (u32::MAX, 10.)],
+			wealth_tax: vec![(1000, 5.), (10000, 7.), (CheeseCoinTy::MAX, 10.)],
 			vat: 2.,
 			last_wealth_tax: chrono::Utc::now(),
 			last_day: chrono::Utc::now().num_days_from_ce(),
@@ -202,13 +203,14 @@ impl BotData {
 			.personal_accounts
 			.get(&cheese_user.account)
 			.filter(|acc| acc.owned_bills.contains(&bill))
-			.is_some() || cheese_user.organisations.iter().any(|org| {
-			self.accounts
-				.organisation_accounts
-				.get(org)
-				.filter(|acc| acc.owned_bills.contains(&bill))
-				.is_some()
-		})
+			.is_some()
+			|| cheese_user.organisations.iter().any(|org| {
+				self.accounts
+					.organisation_accounts
+					.get(org)
+					.filter(|acc| acc.owned_bills.contains(&bill))
+					.is_some()
+			})
 	}
 
 	/// Checks if the given bill id is subscribed by the specified user (personal or owned organisation)
@@ -218,19 +220,21 @@ impl BotData {
 			.personal_accounts
 			.get(&cheese_user.account)
 			.filter(|acc| acc.subscribed_bills.contains(&bill))
-			.is_some() || cheese_user.organisations.iter().any(|org| {
-			self.accounts
-				.organisation_accounts
-				.get(org)
-				.filter(|acc| acc.subscribed_bills.contains(&bill))
-				.is_some()
-		})
+			.is_some()
+			|| cheese_user.organisations.iter().any(|org| {
+				self.accounts
+					.organisation_accounts
+					.get(org)
+					.filter(|acc| acc.subscribed_bills.contains(&bill))
+					.is_some()
+			})
 	}
 
 	/// Computes the total currency in circulation (for currency information in balances)
-	pub fn total_currency(&self) -> u32 {
-		self.accounts.personal_accounts.iter().map(|(_, a)| a.balance).sum::<u32>()
-			+ self.accounts.organisation_accounts.iter().map(|(_, a)| a.balance).sum::<u32>()
+	pub fn total_currency(&self) -> CheeseCoinTy {
+		let personal = self.accounts.personal_accounts.iter().map(|(_, a)| a.balance);
+		let orgs = self.accounts.organisation_accounts.iter().map(|(_, a)| a.balance);
+		personal.chain(orgs).fold(0, |a, b| a.saturating_add(b))
 	}
 
 	pub fn treasury_account(&self) -> &Account {
