@@ -481,23 +481,6 @@ fn twaddle_id() -> String {
 	"762325231925854231".to_string()
 }
 async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
-	let days = 738435 - bot_data.last_day;
-	let embed = Embed::standard()
-						.with_title(format!("Hangman in Rust due in {days} days!"))
-						.with_description(format!("Dear Twaddle,\n\nI write to you today to inform you of an approaching deadline that it would be wise not to miss. The program which you yourself have willingly resolved to craft, Hangman in Rust, is due in **{days} days**. Whilst this deadline has the possibility of being percieved as tyranical, relentless and inhumane, I can, in all confidence, assure you that it will be exceptionally benificial to you and all of those around you.\n\nYou have long wanted to learn a low level systems programming language, and have spoken of pursuing a path involving scholarship in Rust for an imoderate period of time. Completing something like this will increase your motivation and perseverance as well as your attention span, which is vital to getting hired at the cheesecake factory which I percieve is your life aim.\n\nBest wishes,\nCheese Bot."));
-	if let Err(e) = dm_embed(client, embed, twaddle_id()).await {
-		error!("Twaddle :( {e:?}");
-	}
-
-	for images in [
-		"https://i1.wp.com/www.pcfruit.com/wp-content/uploads/2017/04/20370.jpg?fit=4256%2C2832&ssl=1",
-		"https://sherwoodphoenix.co.uk/wp-content/uploads/2016/04/Yamaha-C6-Boudoir-Grand-Piano-Black-Polyester-At-Sherwood-Phoenix-Pianos-1.jpg",
-	] {
-		let message = ChannelMessage::new().with_content(images);
-		if let Err(e) = dm_message(client, message, twaddle_id()).await {
-			error!("Twaddle :( {e:?}");
-		}
-	}
 }
 
 /// Runs the bot
