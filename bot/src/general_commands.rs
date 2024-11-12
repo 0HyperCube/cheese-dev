@@ -163,7 +163,7 @@ pub async fn print_money<'a>(handler_data: &mut HandlerData<'a>) {
 }
 
 /// Handles the `/claim rollcall` command
-pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
+pub async fn _rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	//let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
 	// let is_mp = rolls.as_ref().map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
 	// let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));

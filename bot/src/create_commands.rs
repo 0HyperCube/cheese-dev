@@ -192,7 +192,7 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 				),
 		)
 		.with_options(ApplicationCommandOption::new().with_name("view").with_description("View active bills"));
-	let rollcall = ApplicationCommand::new()
+	let _rollcall = ApplicationCommand::new()
 		.with_command_type(CommandType::Chat)
 		.with_name("claim")
 		.with_description("Claim commands")
@@ -330,7 +330,7 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 		.with_commands(balances)
 		.with_commands(pay)
 		.with_commands(bills)
-		.with_commands(rollcall)
+		// .with_commands(rollcall)
 		.with_commands(organisation)
 		.with_commands(parliament)
 		.with_commands(role)

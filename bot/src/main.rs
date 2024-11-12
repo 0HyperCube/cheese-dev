@@ -63,7 +63,7 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"organisation transfer" => organisation_commands::organisation_transfer(&mut handler_data).await,
 				"organisation rename" => organisation_commands::organisation_rename(&mut handler_data).await,
 				"organisation delete" => organisation_commands::organisation_delete(&mut handler_data).await,
-				"claim rollcall" => general_commands::rollcall(&mut handler_data).await,
+				// "claim rollcall" => general_commands::rollcall(&mut handler_data).await,
 				"parliament run" => parliament_commands::set_running(&mut handler_data, true).await,
 				"parliament stop running" => parliament_commands::set_running(&mut handler_data, false).await,
 				"parliament vote" => parliament_commands::vote(&mut handler_data).await,
@@ -480,8 +480,7 @@ async fn treasury_balance(bot_data: &mut BotData, client: &mut DiscordClient) {
 fn twaddle_id() -> String {
 	"762325231925854231".to_string()
 }
-async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {
-}
+async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {}
 
 /// Runs the bot
 async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
