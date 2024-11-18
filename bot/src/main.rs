@@ -64,8 +64,8 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				"organisation rename" => organisation_commands::organisation_rename(&mut handler_data).await,
 				"organisation delete" => organisation_commands::organisation_delete(&mut handler_data).await,
 				// "claim rollcall" => general_commands::rollcall(&mut handler_data).await,
-				"parliament run" => parliament_commands::set_running(&mut handler_data, true).await,
-				"parliament stop running" => parliament_commands::set_running(&mut handler_data, false).await,
+				"parliament add party" => parliament_commands::set_running(&mut handler_data, "Parliament Add Party", true).await,
+				"parliament delete party" => parliament_commands::set_running(&mut handler_data, "Parliament Delete Party", false).await,
 				"parliament vote" => parliament_commands::vote(&mut handler_data).await,
 				"parliament view results" => parliament_commands::view_results(&mut handler_data).await,
 				"parliament count results" => parliament_commands::count_results(&mut handler_data).await,
@@ -80,50 +80,56 @@ async fn handle_interaction(interaction: Interaction, client: &mut DiscordClient
 				_ => warn!("Unhandled command {}", command),
 			};
 		}
-		InteractionType::MessageComponent => {
-			if command.starts_with("vote") {
-				parliament_commands::cast_vote(&mut handler_data, &command[4..]).await
-			}
-		}
 		InteractionType::ApplicationCommandAutocomplete => {
 			let InteractionDataOption { name, value, .. } = focused.unwrap();
 			let str_value = value.as_ref().unwrap().as_str().to_lowercase();
 			info!("Autocomplete focused {} command {} value {}", name, command, str_value);
 
+			let from_id_str = |(name, id): (String, u64)| {
+				ApplicationCommandOptionChoice::new()
+					.with_name(&name[name.len().saturating_sub(100)..])
+					.with_value(OptionType::String(id.to_string()))
+			};
 			let choices = match (command.as_str(), name.as_str()) {
 				("pay", "recipient") | ("sudo print cheesecoin", "recipient") => handler_data
 					.bot_data
 					.personal_accounts()
 					.chain(handler_data.bot_data.organisation_accounts())
+					.map(from_id_str)
 					.collect::<Vec<_>>(),
 				("pay", "from") | ("bill subscribe", "from") | ("bill create", "to") => handler_data
 					.bot_data
 					.personal_account(&handler_data.user)
 					.chain(handler_data.bot_data.owned_orgs(&handler_data.user))
+					.map(from_id_str)
 					.collect(),
 				("organisation transfer", "name") | ("organisation rename", "name") | ("organisation delete", "name") => {
-					handler_data.bot_data.owned_orgs(&handler_data.user).collect()
+					handler_data.bot_data.owned_orgs(&handler_data.user).map(from_id_str).collect()
 				}
-				("organisation transfer", "owner") => handler_data.bot_data.non_self_people(&handler_data.user).collect(),
-				("bill delete", "name") => handler_data.bot_data.owned_bills(&handler_data.user).collect(),
-				("bill subscribe", "name") => handler_data.bot_data.bills().collect(),
-				("bill unsubscribe", "name") => handler_data.bot_data.subscribed_bills(&handler_data.user).collect(),
+				("organisation transfer", "owner") => handler_data.bot_data.non_self_people(&handler_data.user).map(from_id_str).collect(),
+				("bill delete", "name") => handler_data.bot_data.owned_bills(&handler_data.user).map(from_id_str).collect(),
+				("bill subscribe", "name") => handler_data.bot_data.bills().map(from_id_str).collect(),
+				("bill unsubscribe", "name") => handler_data.bot_data.subscribed_bills(&handler_data.user).map(from_id_str).collect(),
+				("parliament add party" | "parliament delete party" | "parliament vote", "party") => handler_data
+					.bot_data
+					.parties()
+					.map(|name| name[name.len().saturating_sub(100)..].to_string())
+					.map(|value| {
+						ApplicationCommandOptionChoice::new()
+							.with_name(value.to_string())
+							.with_value(OptionType::String(value))
+					})
+					.collect(),
 				_ => {
 					warn!(r#"Invalid autocomplete for "{}" on command "{}""#, command, name);
 					return;
 				}
 			};
 
-			let choices = choices.into_iter()
-				.filter(|(name, _)| name.to_lowercase().contains(&str_value))
-				.enumerate()
-				.filter(|(index, _)| *index < 25) // Discord does not allow >25 options.
-				.map(|(_, value)| value)
-				.map(|(name, id)| {
-					ApplicationCommandOptionChoice::new()
-						.with_name(&name[(name.len() as i32 -100).max(0) as usize ..name.len()])
-						.with_value(OptionType::String(id.to_string()))
-				})
+			let choices = choices
+				.into_iter()
+				.filter(|option| option.name.to_lowercase().contains(&str_value))
+				.take(25)
 				.collect::<Vec<_>>();
 
 			InteractionCallback::new(InteractionResponse::ApplicationCommandAutocompleteResult {
@@ -202,39 +208,6 @@ async fn run_loop() {
 		warn!("Running in run loop");
 		run(&mut client, &mut bot_data, path).await;
 	}
-}
-
-fn check_election(bot_data: &mut BotData) {
-	let days_since = ((chrono::Utc::now() - bot_data.previous_time).num_hours()) / 24;
-	let days_from_sunday = chrono::Utc::now().weekday().num_days_from_sunday();
-
-	if chrono::Utc::now().num_days_from_ce() == bot_data.previous_time.num_days_from_ce()
-		|| (((days_from_sunday > 2 && days_from_sunday != 6) || days_since < 4) && chrono::Utc::now().num_days_from_ce() != 738838)
-	{
-		return;
-	}
-	bot_data.previous_time = chrono::Utc::now();
-	bot_data.previous_results = String::new();
-
-	let mut votes = bot_data.election.iter().collect::<Vec<_>>();
-	if votes.is_empty() {
-		warn!("Empty election");
-		bot_data.save();
-		return;
-	}
-	votes.sort_unstable_by_key(|v| -(v.1.len() as i32));
-	for (user_id, votes) in votes {
-		let cheese_user = bot_data.users.get_mut(user_id).unwrap();
-		let name = &bot_data.accounts.personal_accounts[&cheese_user.account].name;
-		bot_data.previous_results += name;
-		bot_data.previous_results += ", ";
-		bot_data.previous_results += &votes.len().to_string();
-		bot_data.previous_results += "\n";
-	}
-	for (_, votes) in bot_data.election.iter_mut() {
-		*votes = Vec::new();
-	}
-	bot_data.save();
 }
 
 async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
@@ -572,7 +545,7 @@ async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
 					check_bills(bot_data, client).await;
 				}
 			}
-			MainMessage::CheckElection => check_election(bot_data),
+			MainMessage::CheckElection => {}
 		}
 	}
 }

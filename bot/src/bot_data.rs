@@ -101,7 +101,8 @@ pub struct BotData {
 	pub last_day: i32,
 	pub treasury_balances: Vec<CheeseCoinTy>,
 	pub wealth_taxes: Vec<CheeseCoinTy>,
-	pub election: HashMap<String, Vec<String>>,
+	#[serde(default)]
+	pub parties: HashMap<String, Vec<String>>,
 	pub previous_time: chrono::DateTime<chrono::Utc>,
 	pub previous_results: String,
 	#[serde(skip)]
@@ -134,7 +135,7 @@ impl Default for BotData {
 			last_day: chrono::Utc::now().num_days_from_ce(),
 			treasury_balances: Vec::new(),
 			wealth_taxes: Vec::new(),
-			election: HashMap::new(),
+			parties: HashMap::new(),
 			previous_time: chrono::Utc::now(),
 			previous_results: "No previous results".into(),
 			file_path: String::new(),
@@ -326,6 +327,11 @@ impl BotData {
 			.iter()
 			.filter_map(|(bill_id, bill)| self.accounts.account(bill.owner).map(|account| (bill, account.name.clone(), bill_id)))
 			.map(|(bill, account_name, &bill_id)| (format_bill(bill, account_name), bill_id))
+	}
+
+	/// List the parties
+	pub fn parties(&self) -> impl Iterator<Item = String> + '_ {
+		self.parties.keys().map(|v| v.clone())
 	}
 
 	pub fn save(&self) {

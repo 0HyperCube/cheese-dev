@@ -201,26 +201,47 @@ pub async fn create_commands(client: &mut DiscordClient, application_id: &String
 				.with_name("rollcall")
 				.with_description("Claim your daily citizen rollcall"),
 		);
+
+	let party_option = ApplicationCommandOption::new()
+		.with_option_type(CommandOptionType::String)
+		.with_name("party")
+		.with_required(true)
+		.with_description("The party")
+		.with_autocomplete(true);
+
 	let parliament = ApplicationCommand::new()
 		.with_command_type(CommandType::Chat)
 		.with_name("parliament")
 		.with_description("Parliament commands")
-		.with_options(ApplicationCommandOption::new().with_name("run").with_description("Run as candidate."))
 		.with_options(
 			ApplicationCommandOption::new()
 				.with_option_type(CommandOptionType::SubCommandGroup)
-				.with_name("stop")
-				.with_description("Stop doing something.")
+				.with_name("add")
+				.with_description("Add something.")
 				.with_options(
 					ApplicationCommandOption::new()
-						.with_name("running")
-						.with_description("Stop running as candidate"),
+						.with_name("party")
+						.with_description("Add a party to the election.")
+						.with_options(party_option.clone().with_autocomplete(false)),
+				),
+		)
+		.with_options(
+			ApplicationCommandOption::new()
+				.with_option_type(CommandOptionType::SubCommandGroup)
+				.with_name("delete")
+				.with_description("Delete something.")
+				.with_options(
+					ApplicationCommandOption::new()
+						.with_name("party")
+						.with_description("Delete a party from the election.")
+						.with_options(party_option.clone()),
 				),
 		)
 		.with_options(
 			ApplicationCommandOption::new()
 				.with_name("vote")
-				.with_description("Vote for a candidate (or change your vote)."),
+				.with_description("Vote for a candidate (or change your vote).")
+				.with_options(party_option.clone()),
 		)
 		.with_options(
 			ApplicationCommandOption::new()

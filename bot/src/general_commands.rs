@@ -5,7 +5,7 @@ use chrono::Datelike;
 use discord::*;
 
 //pub const MP_ROLL: &str = "985804444237172797";
-pub const STAR_ROLE: &str = "1171114445288779916";
+pub const ELECTION_ADMIN_ROLE: &str = "1281907226134577233";
 pub const PRESIDENT_ROLL: &str = "907660552938061834";
 /// Handles the `/about` command
 pub async fn about<'a>(handler_data: &mut HandlerData<'a>) {
