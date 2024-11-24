@@ -5,6 +5,7 @@ use chrono::Datelike;
 use discord::*;
 
 //pub const MP_ROLL: &str = "985804444237172797";
+pub const CITIZEN_ROLL: &str = "985630968650010705";
 pub const ELECTION_ADMIN_ROLE: &str = "1281907226134577233";
 pub const PRESIDENT_ROLL: &str = "907660552938061834";
 /// Handles the `/about` command
@@ -163,20 +164,20 @@ pub async fn print_money<'a>(handler_data: &mut HandlerData<'a>) {
 }
 
 /// Handles the `/claim rollcall` command
-pub async fn _rollcall<'a>(handler_data: &mut HandlerData<'a>) {
-	//let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
-	// let is_mp = rolls.as_ref().map_or(false, |user| user.roles.contains(&MP_ROLL.to_string()));
+pub async fn rollcall<'a>(handler_data: &mut HandlerData<'a>) {
+	let rolls = GuildMember::get_get_guild_member(handler_data.client, DiscordClient::GUILD_ID, &handler_data.user.id).await;
+	let is_citizen = rolls.as_ref().map_or(false, |user| user.roles.contains(&CITIZEN_ROLL.to_string()));
 	// let is_president = rolls.map_or(false, |user| user.roles.contains(&PRESIDENT_ROLL.to_string()));
 
-	// if !is_mp {
-	// 	let descripition = "You can only claim this benefit if you are an MP (if you are just ask to get the MP roll).";
-	// 	respond_with_embed(
-	// 		handler_data,
-	// 		Embed::standard().with_title("Claim Rollcall").with_description(descripition),
-	// 	)
-	// 	.await;
-	// 	return;
-	// }
+	if !is_citizen {
+		let descripition = "You can only claim this benefit if you are an citizen (if you are just ask to get the citizen roll).";
+		respond_with_embed(
+			handler_data,
+			Embed::standard().with_title("Claim Rollcall").with_description(descripition),
+		)
+		.await;
+		return;
+	}
 
 	let cheese_user = handler_data.bot_data.users.users.get_mut(&handler_data.user.id).unwrap();
 	if cheese_user.last_pay.num_days_from_ce() == chrono::Utc::now().num_days_from_ce() {
@@ -194,7 +195,7 @@ pub async fn _rollcall<'a>(handler_data: &mut HandlerData<'a>) {
 	cheese_user.last_pay = chrono::Utc::now();
 
 	let recipient = cheese_user.account;
-	let amount = 2.; //if is_president { 4. } else { 2. };
+	let amount = 2.22; //if is_president { 4. } else { 2. };
 	let (_, recipient_message) = transact(handler_data, recipient, TREASURY, amount);
 
 	if let Some(message) = recipient_message {
