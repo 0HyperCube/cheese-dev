@@ -1,6 +1,5 @@
 use crate::bot_data::*;
 use crate::utilities::*;
-use crate::CheeseCoinTy;
 use chrono::Datelike;
 use discord::*;
 
@@ -31,14 +30,14 @@ pub async fn balances<'a>(handler_data: &mut HandlerData<'a>) {
 		format_cheesecoin(handler_data.bot_data.total_currency()),
 	);
 
-	for &(amount, tax_rate) in &handler_data.bot_data.wealth_tax {
-		let limit = if amount == u32::MAX as CheeseCoinTy || amount == CheeseCoinTy::MAX {
-			" (no limit)".to_string()
-		} else {
-			format!(" <{}", format_cheesecoin(amount))
-		};
-		let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Balance Tax{}:", limit), tax_rate);
-	}
+	// for &(amount, tax_rate) in &handler_data.bot_data.wealth_tax {
+	// 	let limit = if amount == u32::MAX as CheeseCoinTy || amount == CheeseCoinTy::MAX {
+	// 		" (no limit)".to_string()
+	// 	} else {
+	// 		format!(" <{}", format_cheesecoin(amount))
+	// 	};
+	// 	let _ = write!(&mut description, "{:-20} {:.2}%\n", format!("Balance Tax{}:", limit), tax_rate);
+	// }
 
 	let _ = write!(&mut description, "{:-20} {:.2}%\n", "VAT", handler_data.bot_data.vat);
 	//let _ = write!(&mut description, "{:-20} {}\n", "Tax", "removed via decree");

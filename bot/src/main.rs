@@ -1,6 +1,5 @@
 #![feature(int_roundings)]
 #![feature(panic_update_hook)]
-#![feature(map_many_mut)]
 use std::panic;
 
 use chrono::Datelike;
@@ -210,120 +209,120 @@ async fn run_loop() {
 	}
 }
 
-async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
+async fn check_wealth_tax(bot_data: &mut BotData, _client: &mut DiscordClient) {
 	if (chrono::Utc::now() - bot_data.last_wealth_tax) <= chrono::Duration::hours(24 * 7 - 4) {
 		return;
 	}
 
 	bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24 * 7);
-	info!("Applying wealth tax.");
+	// info!("Applying wealth tax.");
 
-	// Applies welth tax to a specific account returning the log information for the user
-	fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> Option<(String, CheeseCoinTy)> {
-		let account = bot_data.accounts.account_mut(account)?;
+	// // Applies welth tax to a specific account returning the log information for the user
+	// fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> Option<(String, CheeseCoinTy)> {
+	// 	let account = bot_data.accounts.account_mut(account)?;
 
-		let tax = ((account.balance as f64 * multiplier).ceil()) as CheeseCoinTy;
-		account.balance = account.balance.saturating_sub(tax);
+	// 	let tax = ((account.balance as f64 * multiplier).ceil()) as CheeseCoinTy;
+	// 	account.balance = account.balance.saturating_sub(tax);
 
-		let result = format!(
-			"\n{:20} -{:9} {}",
-			name.unwrap_or(&account.name),
-			format_cheesecoin(tax),
-			format_cheesecoin(account.balance)
-		);
-		let treasury = bot_data.treasury_account_mut();
-		treasury.balance = treasury.balance.saturating_add(tax);
-		Some((result, tax))
-	}
+	// 	let result = format!(
+	// 		"\n{:20} -{:9} {}",
+	// 		name.unwrap_or(&account.name),
+	// 		format_cheesecoin(tax),
+	// 		format_cheesecoin(account.balance)
+	// 	);
+	// 	let treasury = bot_data.treasury_account_mut();
+	// 	treasury.balance = treasury.balance.saturating_add(tax);
+	// 	Some((result, tax))
+	// }
 
-	let users = (&bot_data).users.users.keys().into_iter().map(|x| x.clone()).collect::<Vec<_>>();
-	let mut total_tax = 0;
+	// let users = (&bot_data).users.users.keys().into_iter().map(|x| x.clone()).collect::<Vec<_>>();
+	// let mut total_tax = 0;
 
-	for user_id in users {
-		let origional_wealth = {
-			bot_data
-				.accounts
-				.account(bot_data.users.users[&user_id].account)
-				.map_or(0, |account| account.balance)
-				+ bot_data.users.users[&user_id]
-					.organisations
-					.clone()
-					.iter()
-					.filter(|&&account| account != TREASURY)
-					.map(|x| bot_data.accounts.account(*x).map_or(0, |account| account.balance))
-					.fold(0, |a: CheeseCoinTy, b: CheeseCoinTy| a.saturating_add(b))
-		};
+	// for user_id in users {
+	// 	let origional_wealth = {
+	// 		bot_data
+	// 			.accounts
+	// 			.account(bot_data.users.users[&user_id].account)
+	// 			.map_or(0, |account| account.balance)
+	// 			+ bot_data.users.users[&user_id]
+	// 				.organisations
+	// 				.clone()
+	// 				.iter()
+	// 				.filter(|&&account| account != TREASURY)
+	// 				.map(|x| bot_data.accounts.account(*x).map_or(0, |account| account.balance))
+	// 				.fold(0, |a: CheeseCoinTy, b: CheeseCoinTy| a.saturating_add(b))
+	// 	};
 
-		let mut total_wealth = origional_wealth;
-		let mut total_tax_collected = 0.;
-		let paid = bot_data
-			.wealth_tax
-			.iter()
-			.map(|&(amount, percent)| {
-				// Amount of tax taken by that band
-				let taxed = amount.min(total_wealth);
-				total_wealth -= taxed;
-				let tax_collected = taxed as f64 * percent / 100.;
-				total_tax_collected += tax_collected;
-				(taxed, percent)
-			})
-			.collect::<Vec<_>>();
-		let tax_rate = total_tax_collected / origional_wealth as f64;
+	// 	let mut total_wealth = origional_wealth;
+	// 	let mut total_tax_collected = 0.;
+	// 	let paid = bot_data
+	// 		.wealth_tax
+	// 		.iter()
+	// 		.map(|&(amount, percent)| {
+	// 			// Amount of tax taken by that band
+	// 			let taxed = amount.min(total_wealth);
+	// 			total_wealth -= taxed;
+	// 			let tax_collected = taxed as f64 * percent / 100.;
+	// 			total_tax_collected += tax_collected;
+	// 			(taxed, percent)
+	// 		})
+	// 		.collect::<Vec<_>>();
+	// 	let tax_rate = total_tax_collected / origional_wealth as f64;
 
-		let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
+	// 	let mut result = format!("{:20} {:10} {}", "Account Name", "Tax", "New value");
 
-		let tax = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"), tax_rate);
-		result += tax.as_ref().map_or(&"", |tax| &tax.0);
-		total_tax += tax.as_ref().map_or(0, |tax| tax.1);
+	// 	let tax = &apply_wealth_tax_account(bot_data, bot_data.users.users[&user_id].account.clone(), Some("Personal"), tax_rate);
+	// 	result += tax.as_ref().map_or(&"", |tax| &tax.0);
+	// 	total_tax += tax.as_ref().map_or(0, |tax| tax.1);
 
-		for org in bot_data.users.users[&user_id].organisations.clone() {
-			if org == 0 {
-				continue;
-			}
-			let tax = &apply_wealth_tax_account(bot_data, org, None, tax_rate);
-			result += tax.as_ref().map_or(&"", |tax| &tax.0);
-			total_tax += tax.as_ref().map_or(0, |tax| tax.1);
-		}
+	// 	for org in bot_data.users.users[&user_id].organisations.clone() {
+	// 		if org == 0 {
+	// 			continue;
+	// 		}
+	// 		let tax = &apply_wealth_tax_account(bot_data, org, None, tax_rate);
+	// 		result += tax.as_ref().map_or(&"", |tax| &tax.0);
+	// 		total_tax += tax.as_ref().map_or(0, |tax| tax.1);
+	// 	}
 
-		if total_tax > 0 {
-			let description = format!(
-				"Balance tax has been applied at `{}`.\n\n**Payments**\n```\n{}```",
-				paid.into_iter()
-					.filter(|(cc, _)| *cc != 0)
-					.map(|(a, b)| format!("{}: {:.2}%", format_cheesecoin(a), b))
-					.collect::<Vec<_>>()
-					.join(","),
-				result
-			);
+	// 	if total_tax > 0 {
+	// 		let description = format!(
+	// 			"Balance tax has been applied at `{}`.\n\n**Payments**\n```\n{}```",
+	// 			paid.into_iter()
+	// 				.filter(|(cc, _)| *cc != 0)
+	// 				.map(|(a, b)| format!("{}: {:.2}%", format_cheesecoin(a), b))
+	// 				.collect::<Vec<_>>()
+	// 				.join(","),
+	// 			result
+	// 		);
 
-			if let Err(e) = dm_embed(
-				client,
-				Embed::standard().with_title("Balance Tax").with_description(description),
-				user_id.clone(),
-			)
-			.await
-			{
-				error!("Failed to dm {user_id} about their wealth tax: {e:?}.")
-			}
-		}
-	}
+	// 		if let Err(e) = dm_embed(
+	// 			client,
+	// 			Embed::standard().with_title("Balance Tax").with_description(description),
+	// 			user_id.clone(),
+	// 		)
+	// 		.await
+	// 		{
+	// 			error!("Failed to dm {user_id} about their wealth tax: {e:?}.")
+	// 		}
+	// 	}
+	// }
 
-	bot_data.wealth_taxes.push(total_tax);
-	for (user_id, user) in &mut bot_data.users.users {
-		if user.organisations.contains(&0) {
-			let description = format!("The treasury has collected {} of balance tax.", format_cheesecoin(total_tax));
-			if let Err(e) = dm_embed(
-				client,
-				Embed::standard().with_title("Total Balance Tax").with_description(description),
-				user_id.clone(),
-			)
-			.await
-			{
-				error!("Failed to message treasury owner {user_id} about the collected wealth tax: {e:?}");
-			};
-			break;
-		}
-	}
+	// bot_data.wealth_taxes.push(total_tax);
+	// for (user_id, user) in &mut bot_data.users.users {
+	// 	if user.organisations.contains(&0) {
+	// 		let description = format!("The treasury has collected {} of balance tax.", format_cheesecoin(total_tax));
+	// 		if let Err(e) = dm_embed(
+	// 			client,
+	// 			Embed::standard().with_title("Total Balance Tax").with_description(description),
+	// 			user_id.clone(),
+	// 		)
+	// 		.await
+	// 		{
+	// 			error!("Failed to message treasury owner {user_id} about the collected wealth tax: {e:?}");
+	// 		};
+	// 		break;
+	// 	}
+	// }
 
 	bot_data.save();
 }
@@ -453,7 +452,7 @@ async fn treasury_balance(bot_data: &mut BotData, client: &mut DiscordClient) {
 fn twaddle_id() -> String {
 	"762325231925854231".to_string()
 }
-async fn twaddle(bot_data: &mut BotData, client: &mut DiscordClient) {}
+async fn twaddle(_bot_data: &mut BotData, _client: &mut DiscordClient) {}
 
 /// Runs the bot
 async fn run(client: &mut DiscordClient, bot_data: &mut BotData, path: &str) {
