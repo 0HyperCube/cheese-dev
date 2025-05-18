@@ -710,12 +710,10 @@
 	},
 	next_account: 174,
 	wealth_tax: [
-		(2000, 0.0),
-		(20000, 7.0),
-		(4294967295, 10.0),
+		(4294967295, 7.0),
 	],
 	vat: 2.0,
-	last_wealth_tax: "2025-05-18T05:00:00Z",
+	last_wealth_tax: "2025-05-10T05:00:00Z",
 	last_day: 739389,
 	treasury_balances: [
 		82398,
