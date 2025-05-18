@@ -1,5 +1,6 @@
 use crate::bot_data::*;
 use crate::utilities::*;
+use crate::CheeseCoinTy;
 use chrono::Datelike;
 use discord::*;
 
