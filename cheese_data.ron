@@ -33,7 +33,7 @@
 			),
 			"808041627989311508": (
 				account: 170,
-				last_pay: "2025-05-14T06:25:31.483449368Z",
+				last_pay: "2025-05-18T08:06:38.892213277Z",
 				organisations: [],
 				role_id: Some("1371949541493968918"),
 			),
@@ -54,7 +54,7 @@
 			),
 			"788516359205027841": (
 				account: 100,
-				last_pay: "2024-10-14T16:54:26.822348417Z",
+				last_pay: "2025-05-15T08:38:42.340925981Z",
 				organisations: [],
 			),
 			"762325231925854231": (
@@ -85,7 +85,7 @@
 			),
 			"630073509137350690": (
 				account: 630073509137350690,
-				last_pay: "2025-05-14T16:52:42.394831511Z",
+				last_pay: "2025-05-18T07:42:10.179069840Z",
 				organisations: [
 					162,
 					164,
@@ -168,7 +168,7 @@
 			),
 			"709767987242074116": (
 				account: 709767987242074116,
-				last_pay: "2025-05-13T06:36:34.485054833Z",
+				last_pay: "2025-05-17T07:01:09.643043417Z",
 				organisations: [],
 			),
 			"707914275531915367": (
@@ -219,7 +219,7 @@
 			),
 			630073509137350690: (
 				name: "James",
-				balance: 57309,
+				balance: 58253,
 				owned_bills: [
 					93,
 					106,
@@ -266,7 +266,7 @@
 			),
 			709767987242074116: (
 				name: "Adam",
-				balance: 25232,
+				balance: 25898,
 			),
 			24: (
 				name: "Adonis",
@@ -296,7 +296,7 @@
 			),
 			170: (
 				name: "johnfajita",
-				balance: 444,
+				balance: 1332,
 			),
 			102: (
 				name: "fredo12321",
@@ -308,7 +308,7 @@
 			),
 			100: (
 				name: "Philip",
-				balance: 1541,
+				balance: 1763,
 				owned_bills: [
 					116,
 				],
@@ -429,7 +429,7 @@
 			),
 			0: (
 				name: "Treasury",
-				balance: 6126,
+				balance: 3406,
 				owned_bills: [
 					163,
 				],
@@ -492,7 +492,7 @@
 	bills: {
 		93: (
 			name: "Write bullet points",
-			last_pay: 739382,
+			last_pay: 739389,
 			interval: 7,
 			amount: 600,
 			owner: 630073509137350690,
@@ -502,7 +502,7 @@
 		),
 		156: (
 			name: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAA",
-			last_pay: 739385,
+			last_pay: 739389,
 			interval: 2,
 			amount: 200,
 			owner: 64,
@@ -518,7 +518,7 @@
 		),
 		117: (
 			name: "louis money bonds",
-			last_pay: 739380,
+			last_pay: 739387,
 			interval: 7,
 			amount: 120,
 			owner: 737928480389333004,
@@ -536,7 +536,7 @@
 		),
 		126: (
 			name: "treasury donations",
-			last_pay: 739385,
+			last_pay: 739389,
 			interval: 1,
 			amount: 10,
 			owner: 64,
@@ -554,7 +554,7 @@
 		),
 		160: (
 			name: "CheeseBot (Wage Settlement With NUGO)",
-			last_pay: 739381,
+			last_pay: 739388,
 			interval: 7,
 			amount: 500,
 			owner: 630073509137350690,
@@ -572,7 +572,7 @@
 		),
 		108: (
 			name: "Cabinet (Adonis)",
-			last_pay: 739381,
+			last_pay: 739388,
 			interval: 7,
 			amount: 300,
 			owner: 24,
@@ -591,7 +591,7 @@
 		),
 		159: (
 			name: "hmm",
-			last_pay: 739384,
+			last_pay: 739388,
 			interval: 2,
 			amount: 0,
 			owner: 64,
@@ -633,7 +633,7 @@
 		),
 		67: (
 			name: "Cheese Bot",
-			last_pay: 739379,
+			last_pay: 739386,
 			interval: 7,
 			amount: 1500,
 			owner: 12,
@@ -667,7 +667,7 @@
 		),
 		127: (
 			name: "fund for government to be dismantled",
-			last_pay: 739385,
+			last_pay: 739389,
 			interval: 1,
 			amount: 10,
 			owner: 64,
@@ -685,7 +685,7 @@
 		),
 		116: (
 			name: "xiao kun micro aggression",
-			last_pay: 739385,
+			last_pay: 739389,
 			interval: 2,
 			amount: 200,
 			owner: 100,
@@ -693,7 +693,7 @@
 		),
 		150: (
 			name: "stable income",
-			last_pay: 739383,
+			last_pay: 739389,
 			interval: 3,
 			amount: 500,
 			owner: 64,
@@ -715,8 +715,8 @@
 		(4294967295, 10.0),
 	],
 	vat: 2.0,
-	last_wealth_tax: "2025-05-11T05:00:00Z",
-	last_day: 739385,
+	last_wealth_tax: "2025-05-18T05:00:00Z",
+	last_day: 739389,
 	treasury_balances: [
 		82398,
 		80898,
@@ -1562,6 +1562,10 @@
 		10232,
 		9566,
 		8456,
+		6126,
+		5460,
+		5016,
+		3850,
 	],
 	wealth_taxes: [
 		4869,
