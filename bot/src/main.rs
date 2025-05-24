@@ -209,7 +209,7 @@ async fn run_loop() {
 	}
 }
 
-async fn check_wealth_tax(bot_data: &mut BotData, _client: &mut DiscordClient) {
+async fn check_wealth_tax(bot_data: &mut BotData, client: &mut DiscordClient) {
 	if (chrono::Utc::now() - bot_data.last_wealth_tax) <= chrono::Duration::hours(24 * 7 - 4) {
 		return;
 	}
@@ -217,7 +217,7 @@ async fn check_wealth_tax(bot_data: &mut BotData, _client: &mut DiscordClient) {
 	bot_data.last_wealth_tax = bot_data.last_wealth_tax + chrono::Duration::hours(24 * 7);
 	info!("Applying wealth tax.");
 
-	// Applies welth tax to a specific account returning the log information for the user
+	// Applies wealth tax to a specific account returning the log information for the user
 	fn apply_wealth_tax_account(bot_data: &mut BotData, account: AccountId, name: Option<&str>, multiplier: f64) -> Option<(String, CheeseCoinTy)> {
 		let account = bot_data.accounts.account_mut(account)?;
 

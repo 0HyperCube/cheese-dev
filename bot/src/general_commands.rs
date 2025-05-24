@@ -1,11 +1,12 @@
 use crate::bot_data::*;
 use crate::utilities::*;
+use crate::CheeseCoinTy;
 use chrono::Datelike;
 use discord::*;
 
 //pub const MP_ROLL: &str = "985804444237172797";
 pub const CITIZEN_ROLL: &str = "985630968650010705";
-pub const ELECTION_ADMIN_ROLE: &str = "1281907226134577233";
+pub const ELECTION_ADMIN_ROLE: &str = "1293607752534593576";
 pub const PRESIDENT_ROLL: &str = "907660552938061834";
 /// Handles the `/about` command
 pub async fn about<'a>(handler_data: &mut HandlerData<'a>) {
